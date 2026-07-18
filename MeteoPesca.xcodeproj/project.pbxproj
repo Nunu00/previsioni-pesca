@@ -1,321 +1,339 @@
-// !$*UTF8*$!
-{
-	archiveVersion = 1;
-	classes = {
-	};
-	objectVersion = 56;
-	objects = {
-
-/* Begin PBXBuildFile section */
-		2C5B42AF278A9C16008E1D21 /* MeteoPescaApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2C5B42AF278A9C16008E1D11 /* MeteoPescaApp.swift */; };
-		2C5B42AF278A9C16008E1D22 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2C5B42AF278A9C16008E1D12 /* ContentView.swift */; };
-		2C5B42AF278A9C16008E1D23 /* AstronomyEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2C5B42AF278A9C16008E1D13 /* AstronomyEngine.swift */; };
-		2C5B42AF278A9C16008E1D24 /* TideEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2C5B42AF278A9C16008E1D14 /* TideEngine.swift */; };
-		2C5B42AF278A9C16008E1D25 /* RulesEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2C5B42AF278A9C16008E1D15 /* RulesEngine.swift */; };
-		2C5B42AF278A9C16008E1D26 /* Models.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2C5B42AF278A9C16008E1D16 /* Models.swift */; };
-		2C5B42AF278A9C16008E1D27 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 2C5B42AF278A9C16008E1D17 /* Assets.xcassets */; };
-/* End PBXBuildFile section */
-
-/* Begin PBXFileReference section */
-		2C5B42AF278A9C16008E1D08 /* MeteoPesca.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = MeteoPesca.app; sourceTree = BUILT_PRODUCTS_DIR; };
-		2C5B42AF278A9C16008E1D11 /* MeteoPescaApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MeteoPescaApp.swift; sourceTree = "<group>"; };
-		2C5B42AF278A9C16008E1D12 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
-		2C5B42AF278A9C16008E1D13 /* AstronomyEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AstronomyEngine.swift; sourceTree = "<group>"; };
-		2C5B42AF278A9C16008E1D14 /* TideEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TideEngine.swift; sourceTree = "<group>"; };
-		2C5B42AF278A9C16008E1D15 /* RulesEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RulesEngine.swift; sourceTree = "<group>"; };
-		2C5B42AF278A9C16008E1D16 /* Models.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models.swift; sourceTree = "<group>"; };
-		2C5B42AF278A9C16008E1D17 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
-/* End PBXFileReference section */
-
-/* Begin PBXFrameworksBuildPhase section */
-		2C5B42AF278A9C16008E1D05 /* Frameworks */ = {
-			isa = PBXFrameworksBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-/* End PBXFrameworksBuildPhase section */
-
-/* Begin PBXGroup section */
-		2C5B42AF278A9C16008E1D01 = {
-			isa = PBXGroup;
-			children = (
-				2C5B42AF278A9C16008E1D02 /* MeteoPesca */,
-				2C5B42AF278A9C16008E1D07 /* Products */,
-			);
-			sourceTree = "<group>";
-		};
-		2C5B42AF278A9C16008E1D02 /* MeteoPesca */ = {
-			isa = PBXGroup;
-			children = (
-				2C5B42AF278A9C16008E1D11 /* MeteoPescaApp.swift */,
-				2C5B42AF278A9C16008E1D12 /* ContentView.swift */,
-				2C5B42AF278A9C16008E1D13 /* AstronomyEngine.swift */,
-				2C5B42AF278A9C16008E1D14 /* TideEngine.swift */,
-				2C5B42AF278A9C16008E1D15 /* RulesEngine.swift */,
-				2C5B42AF278A9C16008E1D16 /* Models.swift */,
-				2C5B42AF278A9C16008E1D17 /* Assets.xcassets */,
-			);
-			path = MeteoPesca;
-			sourceTree = "<group>";
-		};
-		2C5B42AF278A9C16008E1D07 /* Products */ = {
-			isa = PBXGroup;
-			children = (
-				2C5B42AF278A9C16008E1D08 /* MeteoPesca.app */,
-			);
-			name = Products;
-			sourceTree = "<group>";
-		};
-/* End PBXGroup section */
-
-/* Begin PBXNativeTarget section */
-		2C5B42AF278A9C16008E1D03 /* MeteoPesca */ = {
-			isa = PBXNativeTarget;
-			buildConfigurationList = 2C5B42AF278A9C16008E1D0D /* Build configuration list for PBXNativeTarget "MeteoPesca" */;
-			buildPhases = (
-				2C5B42AF278A9C16008E1D04 /* Sources */,
-				2C5B42AF278A9C16008E1D05 /* Frameworks */,
-				2C5B42AF278A9C16008E1D06 /* Resources */,
-			);
-			buildRules = (
-			);
-			dependencies = (
-			);
-			name = MeteoPesca;
-			packageProductDependencies = (
-				2C5B42AF278A9C16008E1D32 /* SwiftAA */,
-			);
-			productName = MeteoPesca;
-			productReference = 2C5B42AF278A9C16008E1D08 /* MeteoPesca.app */;
-			productType = "com.apple.product-type.application";
-		};
-/* End PBXNativeTarget section */
-
-/* Begin PBXProject section */
-		2C5B42AF278A9C16008E1D00 /* Project object */ = {
-			isa = PBXProject;
-			attributes = {
-				BuildIndependentTargetsInParallel = 1;
-				LastSwiftUpdateCheck = 1500;
-				LastUpgradeCheck = 1500;
-				TargetAttributes = {
-					2C5B42AF278A9C16008E1D03 = {
-						CreatedOnToolsVersion = 15.0;
-					};
-				};
-			};
-			buildConfigurationList = 2C5B42AF278A9C16008E1D0E /* Build configuration list for PBXProject */;
-			compatibilityVersion = "Xcode 14.0";
-			developmentRegion = it;
-			hasScannedForEncodings = 0;
-			mainGroup = 2C5B42AF278A9C16008E1D01;
-			packageReferences = (
-				2C5B42AF278A9C16008E1D31 /* XCRemoteSwiftPackageReference "SwiftAA" */,
-			);
-			projectDirPath = "";
-			projectRoot = "";
-			targets = (
-				2C5B42AF278A9C16008E1D03 /* MeteoPesca */,
-			);
-		};
-/* End PBXProject section */
-
-/* Begin PBXResourcesBuildPhase section */
-		2C5B42AF278A9C16008E1D06 /* Resources */ = {
-			isa = PBXResourcesBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-				2C5B42AF278A9C16008E1D27 /* Assets.xcassets in Resources */,
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-/* End PBXResourcesBuildPhase section */
-
-/* Begin PBXSourcesBuildPhase section */
-		2C5B42AF278A9C16008E1D04 /* Sources */ = {
-			isa = PBXSourcesBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-				2C5B42AF278A9C16008E1D21 /* MeteoPescaApp.swift in Sources */,
-				2C5B42AF278A9C16008E1D22 /* ContentView.swift in Sources */,
-				2C5B42AF278A9C16008E1D23 /* AstronomyEngine.swift in Sources */,
-				2C5B42AF278A9C16008E1D24 /* TideEngine.swift in Sources */,
-				2C5B42AF278A9C16008E1D25 /* RulesEngine.swift in Sources */,
-				2C5B42AF278A9C16008E1D26 /* Models.swift in Sources */,
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-/* End PBXSourcesBuildPhase section */
-
-/* Begin XCRemoteSwiftPackageReference section */
-		2C5B42AF278A9C16008E1D31 /* XCRemoteSwiftPackageReference "SwiftAA" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/onekiloparsec/SwiftAA.git";
-			requirement = {
-				kind = upToNextMajorVersion;
-				minimumVersion = 2.4.0;
-			};
-		};
-/* End XCRemoteSwiftPackageReference section */
-
-/* Begin XCSwiftPackageProductDependency section */
-		2C5B42AF278A9C16008E1D32 /* XCSwiftPackageProductDependency "SwiftAA" */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = 2C5B42AF278A9C16008E1D31 /* XCRemoteSwiftPackageReference "SwiftAA" */;
-			productName = SwiftAA;
-		};
-/* End XCSwiftPackageProductDependency section */
-
-/* Begin XCBuildConfiguration section */
-		2C5B42AF278A9C16008E1D09 /* Debug */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
-				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
-				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_ASSET_PATHS = "";
-				ENABLE_PREVIEWS = YES;
-				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_KEY_CFBundleDisplayName = MeteoPesca;
-				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.weather";
-				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
-				LD_RUNPATH_SEARCH_PATHS = (
-					"$(inherited)",
-					"@executable_path/Frameworks",
-				);
-				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.vincenzo.MeteoPesca;
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
-				SUPPORTS_MACCATALYST = NO;
-				SWIFT_EMIT_LOC_STRINGS = YES;
-				SWIFT_VERSION = 5.8;
-				TARGETED_DEVICE_FAMILY = "1,2";
-			};
-			name = Debug;
-		};
-		2C5B42AF278A9C16008E1D0A /* Release */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
-				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
-				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_ASSET_PATHS = "";
-				ENABLE_PREVIEWS = YES;
-				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_KEY_CFBundleDisplayName = MeteoPesca;
-				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.weather";
-				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
-				LD_RUNPATH_SEARCH_PATHS = (
-					"$(inherited)",
-					"@executable_path/Frameworks",
-				);
-				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.vincenzo.MeteoPesca;
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
-				SUPPORTS_MACCATALYST = NO;
-				SWIFT_EMIT_LOC_STRINGS = YES;
-				SWIFT_VERSION = 5.8;
-				TARGETED_DEVICE_FAMILY = "1,2";
-			};
-			name = Release;
-		};
-		2C5B42AF278A9C16008E1D0B /* Debug */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				ALWAYS_SEARCH_USER_PATHS = NO;
-				CLANG_ANALYZER_NONNULL = YES;
-				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
-				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
-				CLANG_CXX_LIBRARY = "libc++";
-				CLANG_ENABLE_MODULES = YES;
-				CLANG_ENABLE_OBJC_ARC = YES;
-				CLANG_ENABLE_OBJC_WEAK = YES;
-				COPY_PHASE_STRIP = NO;
-				DEBUG_INFORMATION_FORMAT = dwarf;
-				ENABLE_STRICT_OBJC_MSGSEND = YES;
-				GCC_C_LANGUAGE_STANDARD = gnu11;
-				GCC_DYNAMIC_NO_PIC = NO;
-				GCC_NO_COMMON_BLOCKS = YES;
-				GCC_OPTIMIZATION_LEVEL = 0;
-				GCC_PREPROCESSOR_DEFINITIONS = (
-					"DEBUG=1",
-					"$(inherited)",
-				);
-				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
-				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
-				GCC_WARN_UNDECLARED_SELECTOR = YES;
-				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
-				GCC_WARN_UNUSED_FUNCTION = YES;
-				GCC_WARN_UNUSED_VARIABLE = YES;
-				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
-				MTL_FAST_MATH = YES;
-				ONLY_ACTIVE_ARCH = YES;
-				SDKROOT = iphoneos;
-				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
-				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
-			};
-			name = Debug;
-		};
-		2C5B42AF278A9C16008E1D0C /* Release */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				ALWAYS_SEARCH_USER_PATHS = NO;
-				CLANG_ANALYZER_NONNULL = YES;
-				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
-				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
-				CLANG_CXX_LIBRARY = "libc++";
-				CLANG_ENABLE_MODULES = YES;
-				CLANG_ENABLE_OBJC_ARC = YES;
-				CLANG_ENABLE_OBJC_WEAK = YES;
-				COPY_PHASE_STRIP = YES;
-				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
-				ENABLE_NS_ASSERTIONS = NO;
-				ENABLE_STRICT_OBJC_MSGSEND = YES;
-				GCC_C_LANGUAGE_STANDARD = gnu11;
-				GCC_NO_COMMON_BLOCKS = YES;
-				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
-				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
-				GCC_WARN_UNDECLARED_SELECTOR = YES;
-				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
-				GCC_WARN_UNUSED_FUNCTION = YES;
-				GCC_WARN_UNUSED_VARIABLE = YES;
-				MTL_ENABLE_DEBUG_INFO = NO;
-				MTL_FAST_MATH = YES;
-				SDKROOT = iphoneos;
-				SWIFT_COMPILATION_MODE = wholemodule;
-				SWIFT_OPTIMIZATION_LEVEL = "-O";
-				VALIDATE_PRODUCT = YES;
-			};
-			name = Release;
-		};
-/* End XCBuildConfiguration section */
-
-/* Begin XCConfigurationList section */
-		2C5B42AF278A9C16008E1D0D /* Build configuration list for PBXNativeTarget "MeteoPesca" */ = {
-			isa = XCConfigurationList;
-			buildConfigurations = (
-				2C5B42AF278A9C16008E1D09 /* Debug */,
-				2C5B42AF278A9C16008E1D0A /* Release */,
-			);
-			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Release;
-		};
-		2C5B42AF278A9C16008E1D0E /* Build configuration list for PBXProject */ = {
-			isa = XCConfigurationList;
-			buildConfigurations = (
-				2C5B42AF278A9C16008E1D0B /* Debug */,
-				2C5B42AF278A9C16008E1D0C /* Release */,
-			);
-			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Release;
-		};
-/* End XCConfigurationList section */
-	};
-	rootObject = 2C5B42AF278A9C16008E1D00 /* Project object */;
-}
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 56;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		2C5B42AF278A9C16008E1D52 /* SwiftAA in Embed Frameworks */ = {isa = PBXBuildFile; productRef = 2C5B42AF278A9C16008E1D32 /* SwiftAA */; };
+		2C5B42AF278A9C16008E1D53 /* SwiftAA in Frameworks */ = {isa = PBXBuildFile; productRef = 2C5B42AF278A9C16008E1D32 /* SwiftAA */; };
+		2C5B42AF278A9C16008E1D21 /* MeteoPescaApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2C5B42AF278A9C16008E1D11 /* MeteoPescaApp.swift */; };
+		2C5B42AF278A9C16008E1D22 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2C5B42AF278A9C16008E1D12 /* ContentView.swift */; };
+		2C5B42AF278A9C16008E1D23 /* AstronomyEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2C5B42AF278A9C16008E1D13 /* AstronomyEngine.swift */; };
+		2C5B42AF278A9C16008E1D24 /* TideEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2C5B42AF278A9C16008E1D14 /* TideEngine.swift */; };
+		2C5B42AF278A9C16008E1D25 /* RulesEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2C5B42AF278A9C16008E1D15 /* RulesEngine.swift */; };
+		2C5B42AF278A9C16008E1D26 /* Models.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2C5B42AF278A9C16008E1D16 /* Models.swift */; };
+		2C5B42AF278A9C16008E1D27 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 2C5B42AF278A9C16008E1D17 /* Assets.xcassets */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		2C5B42AF278A9C16008E1D51 /* Embed Frameworks */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 10;
+			files = (
+				2C5B42AF278A9C16008E1D52 /* SwiftAA in Embed Frameworks */,
+			);
+			name = "Embed Frameworks";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
+/* Begin PBXFileReference section */
+		2C5B42AF278A9C16008E1D08 /* MeteoPesca.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = MeteoPesca.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		2C5B42AF278A9C16008E1D11 /* MeteoPescaApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MeteoPescaApp.swift; sourceTree = "<group>"; };
+		2C5B42AF278A9C16008E1D12 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
+		2C5B42AF278A9C16008E1D13 /* AstronomyEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AstronomyEngine.swift; sourceTree = "<group>"; };
+		2C5B42AF278A9C16008E1D14 /* TideEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TideEngine.swift; sourceTree = "<group>"; };
+		2C5B42AF278A9C16008E1D15 /* RulesEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RulesEngine.swift; sourceTree = "<group>"; };
+		2C5B42AF278A9C16008E1D16 /* Models.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models.swift; sourceTree = "<group>"; };
+		2C5B42AF278A9C16008E1D17 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		2C5B42AF278A9C16008E1D05 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				2C5B42AF278A9C16008E1D53 /* SwiftAA in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		2C5B42AF278A9C16008E1D01 = {
+			isa = PBXGroup;
+			children = (
+				2C5B42AF278A9C16008E1D02 /* MeteoPesca */,
+				2C5B42AF278A9C16008E1D07 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		2C5B42AF278A9C16008E1D02 /* MeteoPesca */ = {
+			isa = PBXGroup;
+			children = (
+				2C5B42AF278A9C16008E1D11 /* MeteoPescaApp.swift */,
+				2C5B42AF278A9C16008E1D12 /* ContentView.swift */,
+				2C5B42AF278A9C16008E1D13 /* AstronomyEngine.swift */,
+				2C5B42AF278A9C16008E1D14 /* TideEngine.swift */,
+				2C5B42AF278A9C16008E1D15 /* RulesEngine.swift */,
+				2C5B42AF278A9C16008E1D16 /* Models.swift */,
+				2C5B42AF278A9C16008E1D17 /* Assets.xcassets */,
+			);
+			path = MeteoPesca;
+			sourceTree = "<group>";
+		};
+		2C5B42AF278A9C16008E1D07 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				2C5B42AF278A9C16008E1D08 /* MeteoPesca.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		2C5B42AF278A9C16008E1D03 /* MeteoPesca */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 2C5B42AF278A9C16008E1D0D /* Build configuration list for PBXNativeTarget "MeteoPesca" */;
+			buildPhases = (
+				2C5B42AF278A9C16008E1D04 /* Sources */,
+				2C5B42AF278A9C16008E1D05 /* Frameworks */,
+				2C5B42AF278A9C16008E1D06 /* Resources */,
+				2C5B42AF278A9C16008E1D51 /* Embed Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = MeteoPesca;
+			packageProductDependencies = (
+				2C5B42AF278A9C16008E1D32 /* SwiftAA */,
+			);
+			productName = MeteoPesca;
+			productReference = 2C5B42AF278A9C16008E1D08 /* MeteoPesca.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		2C5B42AF278A9C16008E1D00 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = 1;
+				LastSwiftUpdateCheck = 1500;
+				LastUpgradeCheck = 1500;
+				TargetAttributes = {
+					2C5B42AF278A9C16008E1D03 = {
+						CreatedOnToolsVersion = 15.0;
+					};
+				};
+			};
+			buildConfigurationList = 2C5B42AF278A9C16008E1D0E /* Build configuration list for PBXProject */;
+			compatibilityVersion = "Xcode 14.0";
+			developmentRegion = it;
+			hasScannedForEncodings = 0;
+			mainGroup = 2C5B42AF278A9C16008E1D01;
+			packageReferences = (
+				2C5B42AF278A9C16008E1D31 /* XCRemoteSwiftPackageReference "SwiftAA" */,
+			);
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				2C5B42AF278A9C16008E1D03 /* MeteoPesca */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		2C5B42AF278A9C16008E1D06 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				2C5B42AF278A9C16008E1D27 /* Assets.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		2C5B42AF278A9C16008E1D04 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				2C5B42AF278A9C16008E1D21 /* MeteoPescaApp.swift in Sources */,
+				2C5B42AF278A9C16008E1D22 /* ContentView.swift in Sources */,
+				2C5B42AF278A9C16008E1D23 /* AstronomyEngine.swift in Sources */,
+				2C5B42AF278A9C16008E1D24 /* TideEngine.swift in Sources */,
+				2C5B42AF278A9C16008E1D25 /* RulesEngine.swift in Sources */,
+				2C5B42AF278A9C16008E1D26 /* Models.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		2C5B42AF278A9C16008E1D31 /* XCRemoteSwiftPackageReference "SwiftAA" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/onekiloparsec/SwiftAA.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 2.4.0;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		2C5B42AF278A9C16008E1D32 /* XCSwiftPackageProductDependency "SwiftAA" */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 2C5B42AF278A9C16008E1D31 /* XCRemoteSwiftPackageReference "SwiftAA" */;
+			productName = SwiftAA;
+		};
+/* End XCSwiftPackageProductDependency section */
+
+/* Begin XCBuildConfiguration section */
+		2C5B42AF278A9C16008E1D09 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_ASSET_PATHS = "";
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = MeteoPesca;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.weather";
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.vincenzo.MeteoPesca;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.8;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		2C5B42AF278A9C16008E1D0A /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_ASSET_PATHS = "";
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = MeteoPesca;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.weather";
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.vincenzo.MeteoPesca;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.8;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+		2C5B42AF278A9C16008E1D0B /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = iphoneos;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+			};
+			name = Debug;
+		};
+		2C5B42AF278A9C16008E1D0C /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				COPY_PHASE_STRIP = YES;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				SDKROOT = iphoneos;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		2C5B42AF278A9C16008E1D0D /* Build configuration list for PBXNativeTarget "MeteoPesca" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				2C5B42AF278A9C16008E1D09 /* Debug */,
+				2C5B42AF278A9C16008E1D0A /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		2C5B42AF278A9C16008E1D0E /* Build configuration list for PBXProject */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				2C5B42AF278A9C16008E1D0B /* Debug */,
+				2C5B42AF278A9C16008E1D0C /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = 2C5B42AF278A9C16008E1D00 /* Project object */;
+}
