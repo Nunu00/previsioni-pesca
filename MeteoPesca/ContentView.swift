@@ -439,36 +439,31 @@ struct ContentView: View {
 struct MoonPhaseView: View {
     var age: Double // Moon age (0 to 29.53)
     
-    var body: some View {
-        Canvas { context, size in
-            let center = CGPoint(x: size.width / 2, y: size.height / 2)
-            let radius = min(size.width, size.height) / 2
-            
-            // Draw background dark circle (shadow of moon)
-            context.fill(Path(ellipseIn: CGRect(x: center.x - radius, y: center.y - radius, width: radius * 2, height: radius * 2)), with: .color(Color(white: 0.15)))
-            
-            // Normalised phase (0.0 to 1.0)
-            let phase = age / 29.53059
-            
-            // Generate simple visual representation of lunar phases
-            let path = Path { path in
-                path.addArc(center: center, radius: radius, startAngle: Angle(degrees: -90), endAngle: Angle(degrees: 90), clockwise: false)
-                
-                // Draw illuminated crescent / gibbous shape
-                // Depending on the cycle, we scale the inner curve
-                if phase < 0.5 {
-                    // Waxing phase (left side shadowed, right side illuminated)
-                    let scale = 1.0 - 4.0 * phase // transitions from +1 to -1
-                    path.addArc(center: center, radius: radius, startAngle: Angle(degrees: 90), endAngle: Angle(degrees: -90), clockwise: scale >= 0)
-                } else {
-                    // Waning phase (right side shadowed, left side illuminated)
-                    let scale = 4.0 * phase - 3.0 // transitions from -1 to +1
-                    path.addArc(center: center, radius: radius, startAngle: Angle(degrees: 90), endAngle: Angle(degrees: -90), clockwise: scale <= 0)
-                }
-            }
-            
-            context.fill(path, with: .color(.yellow))
+    var symbolName: String {
+        if age < 1.5 || age > 28.0 {
+            return "moonphase.new.moon"
+        } else if age < 6.5 {
+            return "moonphase.waxing.crescent"
+        } else if age < 8.3 {
+            return "moonphase.first.quarter"
+        } else if age < 13.3 {
+            return "moonphase.waxing.gibbous"
+        } else if age < 16.3 {
+            return "moonphase.full.moon"
+        } else if age < 21.2 {
+            return "moonphase.waning.gibbous"
+        } else if age < 23.0 {
+            return "moonphase.last.quarter"
+        } else {
+            return "moonphase.waning.crescent"
         }
+    }
+    
+    var body: some View {
+        Image(systemName: symbolName)
+            .resizable()
+            .scaledToFit()
+            .foregroundColor(.yellow)
     }
 }
 
