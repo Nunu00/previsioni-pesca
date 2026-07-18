@@ -84,20 +84,7 @@ public class RulesEngine {
             periods[i].isEnhanced = isEnhanced
         }
         
-        // 4. Base level derived from tide amplitude
-        // Mediterranean amplitude is usually small (0.05m to 0.3m)
-        let baseScore: Double
-        if maxAmplitude < 0.08 {
-            baseScore = 0.5 // low tide movement
-        } else if maxAmplitude < 0.15 {
-            baseScore = 1.0 // normal movement
-        } else if maxAmplitude < 0.22 {
-            baseScore = 1.5 // strong movement
-        } else {
-            baseScore = 2.0 // very strong movement ( Messina / spring tide )
-        }
-        
-        // 5. Build Hourly Intervals & Calculate Scores
+        // 4. Build Hourly Intervals & Calculate Scores
         var intervals: [HourlyInterval] = []
         for hour in 0..<24 {
             guard let intervalStart = calendar.date(byAdding: .hour, value: hour, to: startOfDay),
@@ -158,33 +145,42 @@ public class RulesEngine {
             ))
         }
         
-        // 6. Calculate Daily Activity Rating
-        // Combine tide base and moon phase bonus (New Moon and Full Moon are best)
-        var dailyScore = baseScore
-        
-        // Moon phase bonus: New Moon (age 0-2 or 28-30) and Full Moon (age 13-16) get +1.0
-        let roundedAge = round(moonAge)
-        if roundedAge <= 2 || roundedAge >= 28 || (roundedAge >= 13 && roundedAge <= 16) {
-            dailyScore += 1.0 // New/Full moon peak activity
-        } else if (roundedAge >= 6 && roundedAge <= 8) || (roundedAge >= 21 && roundedAge <= 23) {
-            dailyScore += 0.0 // Half moons (Quarters)
-        } else {
-            dailyScore += 0.5 // intermediate phases
-        }
-        
-        // Add solunar bonus: +0.25 for each enhanced period that overlaps with sunrise/sunset
-        let enhancedCount = Double(periods.filter { $0.isEnhanced }.count)
-        dailyScore += enhancedCount * 0.25
+        // 5. Calculate Daily Activity Rating using our calibrated solunar and tide rules
+        let coeff = TideEngine.calculateTideCoefficient(at: date, coordinate: location.coordinate)
         
         let dailyLevel: ActivityLevel
-        if dailyScore < 1.2 {
+        let distToQuarter = min(abs(moonAge - 7.38), abs(moonAge - 22.15))
+        let isQuarter = distToQuarter <= 0.5
+        
+        // Count enhanced periods
+        let enhancedCount = periods.filter { $0.isEnhanced }.count
+        
+        // Query moon distance for Apogee week penalty
+        let ast = AstronomyEngine.calculateAstronomy(date: date, coordinate: location.coordinate)
+        let moonDistance = ast.moonDistance
+        
+        if isQuarter {
             dailyLevel = .bassa
-        } else if dailyScore < 2.0 {
-            dailyLevel = .media
-        } else if dailyScore < 2.8 {
-            dailyLevel = .alta
+        } else if coeff < 38.0 {
+            dailyLevel = .bassa
         } else {
-            dailyLevel = .moltoAlta
+            if enhancedCount >= 2 {
+                dailyLevel = .moltoAlta // 3 fish
+            } else if enhancedCount == 1 {
+                if moonDistance > 403000.0 && coeff < 65.0 {
+                    dailyLevel = .media // 1 fish
+                } else {
+                    dailyLevel = .alta // 2 fish
+                }
+            } else { // enhancedCount == 0
+                if coeff >= 68.0 {
+                    dailyLevel = .alta // 2 fish
+                } else if moonDistance > 403000.0 {
+                    dailyLevel = .bassa // 0 fish
+                } else {
+                    dailyLevel = .media // 1 fish
+                }
+            }
         }
         
         // 7. Get Moon illumination for display

@@ -94,8 +94,24 @@ public class TideEngine {
         return nearest
     }
     
+    /// Calculates the tide coefficient (ranges from 20 to 120) based on lagged moon phase & distance.
+    /// Incorporates the 1.5-day astronomical lag (age of the tide).
+    public static func calculateTideCoefficient(at date: Date, coordinate: Coordinate) -> Double {
+        let laggedDate = date.addingTimeInterval(-129600) // 1.5 days lag
+        let ast = AstronomyEngine.calculateAstronomy(date: laggedDate, coordinate: coordinate)
+        
+        // Base coefficient: 70.0 + 30.0 * cos(4.0 * .pi * (laggedAge / 29.53059))
+        let baseCoeff = 70.0 + 30.0 * cos(4.0 * .pi * (ast.moonAge / 29.53059))
+        
+        // Distance adjustment (Apogee = 406700, Perigee = 356400)
+        let normDist = (406700.0 - ast.moonDistance) / (406700.0 - 356400.0)
+        let distAdj = (normDist - 0.5) * 30.0
+        
+        return max(20.0, min(120.0, baseCoeff + distAdj))
+    }
+
     /// Computes the tide height at a specific date and time for given coordinates
-    /// using offline harmonic analysis.
+    /// using offline harmonic analysis, modulated by the tide coefficient.
     public static func calculateHeight(at date: Date, coordinate: Coordinate) -> Double {
         let station = findNearestStation(to: coordinate)
         let stationName = station.name
@@ -112,15 +128,16 @@ public class TideEngine {
         let hoursSinceJ2000 = timeInterval / 3600.0
         
         // Sum constituents: h(t) = sum( A * cos( speed * t - phase ) )
-        var height = 0.0
+        var rawHeight = 0.0
         for name in ["M2", "S2", "N2", "K1", "O1"] {
             guard let const = stationConsts[name], let speed = speeds[name] else { continue }
             // Convert phase and argument to radians
             let argument = (speed * hoursSinceJ2000 - const.phase) * .pi / 180.0
-            height += const.amp * cos(argument)
+            rawHeight += const.amp * cos(argument)
         }
         
-        return height
+        let coeff = calculateTideCoefficient(at: date, coordinate: coordinate)
+        return rawHeight * (coeff / 70.0)
     }
     
     /// Scans the entire 24h day in 5-minute increments to find the peaks (high tides) and troughs (low tides).

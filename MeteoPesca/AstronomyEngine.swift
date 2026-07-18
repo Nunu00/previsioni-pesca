@@ -14,14 +14,15 @@ public class AstronomyEngine {
         moonAntiTransit: Date?,
         moonPhase: String,
         moonAge: Double,
-        moonIllumination: Double
+        moonIllumination: Double,
+        moonDistance: Double
     ) {
         // Convert to local mid-day (12:00) to get representative day coordinates
         var calendar = Calendar.current
         calendar.timeZone = TimeZone.current
         let startOfDay = calendar.startOfDay(for: date)
         guard let midDay = calendar.date(byAdding: .hour, value: 12, to: startOfDay) else {
-            return (nil, nil, nil, nil, nil, nil, "N/A", 0, 0)
+            return (nil, nil, nil, nil, nil, nil, "N/A", 0, 0, 384400.0)
         }
         
         let jd = JulianDay(midDay)
@@ -87,6 +88,7 @@ public class AstronomyEngine {
             phaseName = "Luna Nuova"
         }
         
-        return (sunrise, sunset, moonrise, moonset, moonTransit, moonAntiTransit, phaseName, age, illumination)
+        let moonDistance = moon.distance.value
+        return (sunrise, sunset, moonrise, moonset, moonTransit, moonAntiTransit, phaseName, age, illumination, moonDistance)
     }
 }
