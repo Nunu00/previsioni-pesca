@@ -240,25 +240,29 @@ public class RulesEngine {
         
         guard let mHigh = minDiffHigh, let mLow = minDiffLow else { return 1.0 }
         
-        // 1. Peak window around High Tide (1h before to 30 min after)
-        if mHigh >= -60.0 && mHigh <= 30.0 {
-            let distanceFromPeak = abs(mHigh + 15.0)
-            return 1.5 - (distanceFromPeak / 60.0) * 0.3
-        }
-        
-        // 2. Slack water around Low Tide (within 30 minutes of low tide)
+        // 1. Slack water around Low Tide (within 30 minutes of low tide)
         if abs(mLow) <= 30.0 {
             return 0.7
         }
         
-        // 3. Determine if current phase is rising (flood) or falling (ebb)
-        // If closest high tide is in the future and closest low tide is in the past, it's a rising tide.
-        let isRising = mHigh > 0 && mLow < 0
+        // 2. Peak high tide window (within 60 minutes of high tide)
+        if abs(mHigh) <= 60.0 {
+            return 1.5
+        }
         
-        if isRising {
-            return 1.2 // Flood tide bonus (active movement/current bringing food)
+        // 3. Determine if current phase is rising (flood) or falling (ebb)
+        let isEbb = mHigh < 0 && mLow > 0
+        
+        if isEbb {
+            // Falling tide (ebb)
+            if abs(mHigh) <= 180.0 {
+                return 1.1 // ebbEarly: first 3 hours after high tide peak window
+            } else {
+                return 1.3 // ebbLate: last hours before low tide (funnel effect)
+            }
         } else {
-            return 0.9 // Ebb tide phase (activity subsiding)
+            // Rising tide (flood)
+            return 1.2 // floodMidCycle
         }
     }
 }
