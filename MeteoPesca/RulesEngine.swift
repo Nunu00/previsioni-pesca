@@ -118,6 +118,7 @@ public class RulesEngine {
             }
             
             // Scientific Tidal Phase Activity Factor (Common Goby & Reef fish studies)
+            let midHourDate = intervalStart.addingTimeInterval(1800)
             let tidalFactor = calculateTidalActivityFactor(date: midHourDate, tides: tides, coordinate: location.coordinate, maxAmplitude: maxAmplitude)
             hourScore *= tidalFactor
             
