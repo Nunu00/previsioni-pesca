@@ -383,61 +383,9 @@ struct ContentView: View {
                         }
                         
                         // Legenda del calendario
-                            VStack(alignment: .leading, spacing: 8) {
-                                Divider()
-                                    .background(Color.white.opacity(0.1))
-                                    .padding(.vertical, 4)
-                                
-                                Text("LEGENDA CALENDARIO")
-                                    .font(.system(size: 9))
-                                    .fontWeight(.bold)
-                                    .foregroundColor(.white.opacity(0.5))
-                                    .tracking(1)
-                                
-                                HStack(alignment: .top, spacing: 16) {
-                                    VStack(alignment: .leading, spacing: 4) {
-                                        HStack(spacing: 4) {
-                                            RoundedRectangle(cornerRadius: 3)
-                                                .fill(Color.white.opacity(0.15))
-                                                .stroke(Color.white.opacity(0.8), lineWidth: 1)
-                                                .frame(width: 12, height: 12)
-                                            Text("Previsioni Reali").font(.system(size: 9)).foregroundColor(.white.opacity(0.7))
-                                        }
-                                        
-                                        HStack(spacing: 4) {
-                                            RoundedRectangle(cornerRadius: 3)
-                                                .fill(Color.clear)
-                                                .stroke(Color.white.opacity(0.4), style: StrokeStyle(lineWidth: 1, dash: [4, 3]))
-                                                .frame(width: 12, height: 12)
-                                            Text("Stima Climatologica").font(.system(size: 9)).foregroundColor(.white.opacity(0.7))
-                                        }
-                                        
-                                        HStack(spacing: 4) {
-                                            Circle()
-                                                .fill(Color.teal)
-                                                .frame(width: 6, height: 6)
-                                            Text("Oggi (Giorno corrente)").font(.system(size: 9)).foregroundColor(.white.opacity(0.7))
-                                        }
-                                    }
-                                    
-                                    VStack(alignment: .leading, spacing: 4) {
-                                        Text("Efficacia Pesca:").font(.system(size: 9)).foregroundColor(.white.opacity(0.5))
-                                        
-                                        HStack(spacing: 6) {
-                                            ForEach(ActivityLevel.allCases, id: \.self) { level in
-                                                HStack(spacing: 2) {
-                                                    Circle()
-                                                        .fill(colorForActivity(level))
-                                                        .frame(width: 6, height: 6)
-                                                    Text(level.rawValue).font(.system(size: 8)).foregroundColor(.white.opacity(0.7))
-                                                }
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                        .padding()
+                        calendarLegend
+                    }
+                    .padding()
                         .background(Color.white.opacity(0.04))
                         .cornerRadius(16)
                         .overlay(
@@ -979,6 +927,62 @@ struct ContentView: View {
         case .buona: return .yellow
         case .alta: return .orange
         case .moltoAlta: return .green
+        }
+    }
+    
+    private var calendarLegend: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Divider()
+                .background(Color.white.opacity(0.1))
+                .padding(.vertical, 4)
+            
+            Text("LEGENDA CALENDARIO")
+                .font(.system(size: 9))
+                .fontWeight(.bold)
+                .foregroundColor(.white.opacity(0.5))
+                .tracking(1)
+            
+            HStack(alignment: .top, spacing: 16) {
+                VStack(alignment: .leading, spacing: 4) {
+                    HStack(spacing: 4) {
+                        RoundedRectangle(cornerRadius: 3)
+                            .fill(Color.white.opacity(0.15))
+                            .stroke(Color.white.opacity(0.8), lineWidth: 1)
+                            .frame(width: 12, height: 12)
+                        Text("Previsioni Reali").font(.system(size: 9)).foregroundColor(.white.opacity(0.7))
+                    }
+                    
+                    HStack(spacing: 4) {
+                        RoundedRectangle(cornerRadius: 3)
+                            .fill(Color.clear)
+                            .stroke(Color.white.opacity(0.4), style: StrokeStyle(lineWidth: 1, dash: [4, 3]))
+                            .frame(width: 12, height: 12)
+                        Text("Stima Climatologica").font(.system(size: 9)).foregroundColor(.white.opacity(0.7))
+                    }
+                    
+                    HStack(spacing: 4) {
+                        Circle()
+                            .fill(Color.teal)
+                            .frame(width: 6, height: 6)
+                        Text("Oggi (Giorno corrente)").font(.system(size: 9)).foregroundColor(.white.opacity(0.7))
+                    }
+                }
+                
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("Efficacia Pesca:").font(.system(size: 9)).foregroundColor(.white.opacity(0.5))
+                    
+                    HStack(spacing: 6) {
+                        ForEach(ActivityLevel.allCases, id: \.self) { level in
+                            HStack(spacing: 2) {
+                                Circle()
+                                    .fill(colorForActivity(level))
+                                    .frame(width: 6, height: 6)
+                                Text(level.rawValue).font(.system(size: 8)).foregroundColor(.white.opacity(0.7))
+                            }
+                        }
+                    }
+                }
+            }
         }
     }
     
