@@ -87,6 +87,11 @@ public class RulesEngine {
         }
         
         // 4. Build Hourly Intervals & Calculate Scores
+        let weatherMult = weather.multiplier()
+        let tOpt = 20.0
+        let sigma = 5.0
+        let fWaterTemp = exp(-pow(waterTempCelsius - tOpt, 2.0) / (2.0 * pow(sigma, 2.0)))
+        
         var intervals: [HourlyInterval] = []
         for hour in 0..<24 {
             guard let intervalStart = calendar.date(byAdding: .hour, value: hour, to: startOfDay),
@@ -121,6 +126,9 @@ public class RulesEngine {
             let midHourDate = intervalStart.addingTimeInterval(1800)
             let tidalFactor = calculateTidalActivityFactor(date: midHourDate, tides: tides, coordinate: location.coordinate, maxAmplitude: maxAmplitude)
             hourScore *= tidalFactor
+            hourScore *= weatherMult
+            hourScore *= fWaterTemp
+            hourScore = min(hourScore, 3.2) // apply stabilizing cap to prevent multiple overlapping bonuses from inflating the score
             
             // Map score to Activity level
             let level: ActivityLevel
@@ -183,6 +191,7 @@ public class RulesEngine {
         let sigma = 5.0
         let fWaterTemp = exp(-pow(waterTempCelsius - tOpt, 2.0) / (2.0 * pow(sigma, 2.0)))
         score *= fWaterTemp
+        score = min(score, 1.8) // apply stabilizing cap to prevent extreme inflation
         
         // Map continuous score to daily activity level using optimized thresholds:
         // T1 = 0.166, T2 = 0.416, T3 = 1.288
@@ -245,8 +254,9 @@ public class RulesEngine {
         
         let rateOfChange = abs(currentLevel - previousLevel)
         
-        // Normalize by daily max amplitude to make the current velocity factor profile independent of local tidal range
-        let normalizedRate = rateOfChange / max(maxAmplitude, 0.05)
+        // Normalize by the fixed reference spring amplitude of the port to prevent circular scaling on neap tide days
+        let referenceSpring = TideEngine.referenceSpringAmplitude(for: coordinate)
+        let normalizedRate = rateOfChange / max(referenceSpring, 0.05)
         
         // Velocity factor: up to 0.4 bonus at max current speed (midpoint of cycle)
         let velocityFactor = 1.0 + min(normalizedRate * 0.8, 0.4)

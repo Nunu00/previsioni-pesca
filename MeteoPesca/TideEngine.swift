@@ -94,6 +94,16 @@ public class TideEngine {
         return nearest
     }
     
+    public static func referenceSpringAmplitude(for coordinate: Coordinate) -> Double {
+        let station = findNearestStation(to: coordinate)
+        let stationName = station.name
+        let stationConsts = constituents[stationName] ?? constituents["Sibari (Ionio)"]!
+        let m2Amp = stationConsts["M2"]?.amp ?? 0.08
+        let s2Amp = stationConsts["S2"]?.amp ?? 0.03
+        // Spring amplitude is physically the sum of the M2 and S2 amplitudes
+        return m2Amp + s2Amp
+    }
+    
     /// Calculates the tide coefficient (ranges from 20 to 120) based on lagged moon phase & distance.
     /// Incorporates the 1.5-day astronomical lag (age of the tide).
     public static func calculateTideCoefficient(at date: Date, coordinate: Coordinate) -> Double {
