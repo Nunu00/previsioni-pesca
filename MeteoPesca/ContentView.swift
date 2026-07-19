@@ -603,7 +603,7 @@ struct ContentView: View {
                     }
                 }
             }
-            .navigationTitle("MeteoPesca Forecast")
+            .navigationTitle("PescAttiva Forecast")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .principal) {
