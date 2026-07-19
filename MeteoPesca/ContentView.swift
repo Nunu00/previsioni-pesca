@@ -252,147 +252,7 @@ struct ContentView: View {
                         .padding(.horizontal)
                         
                         // 1a. Monthly Efficacy Calendar Card
-                        VStack(alignment: .leading, spacing: 12) {
-                            HStack {
-                                Image(systemName: "calendar")
-                                    .foregroundColor(.teal)
-                                    .font(.headline)
-                                Text("Calendario Efficacia")
-                                    .font(.headline)
-                                    .foregroundColor(.white)
-                                Spacer()
-                                HStack(spacing: 8) {
-                                    Button(action: { changeMonth(by: -1) }) {
-                                        Image(systemName: "chevron.left")
-                                            .foregroundColor(.teal)
-                                            .fontWeight(.bold)
-                                            .padding(6)
-                                            .background(Color.white.opacity(0.06))
-                                            .cornerRadius(6)
-                                    }
-                                    
-                                    Text(monthYearString(for: selectedDate))
-                                        .font(.subheadline)
-                                        .fontWeight(.bold)
-                                        .foregroundColor(.white)
-                                        .frame(minWidth: 95, alignment: .center)
-                                    
-                                    Button(action: { changeMonth(by: 1) }) {
-                                        Image(systemName: "chevron.right")
-                                            .foregroundColor(.teal)
-                                            .fontWeight(.bold)
-                                            .padding(6)
-                                            .background(Color.white.opacity(0.06))
-                                            .cornerRadius(6)
-                                    }
-                                }
-                            }
-                            
-                            // Days of week header
-                            HStack(spacing: 0) {
-                                ForEach(["Lu", "Ma", "Me", "Gi", "Ve", "Sa", "Do"], id: \.self) { day in
-                                    Text(day)
-                                        .font(.caption2)
-                                        .fontWeight(.bold)
-                                        .foregroundColor(.white.opacity(0.4))
-                                        .frame(maxWidth: .infinity)
-                                }
-                            }
-                            
-                            let days = calendarDays
-                            let firstDayOfWeek = Calendar.current.component(.weekday, from: days.first ?? Date())
-                            // In iOS: Sunday is 1, Monday is 2, ..., Saturday is 7.
-                            // Convert to 0-indexed starting on Monday:
-                            let leadingEmptySlots = (firstDayOfWeek + 5) % 7
-                            
-                            LazyVGrid(columns: columns, spacing: 6) {
-                                ForEach(0..<leadingEmptySlots, id: \.self) { _ in
-                                    Color.clear
-                                        .frame(height: 32)
-                                }
-                                                                 ForEach(days, id: \.self) { date in
-                                    let activity = activityForDate(date)
-                                    let isToday = Calendar.current.isDate(date, inSameDayAs: Date())
-                                    let isSelected = Calendar.current.isDate(date, inSameDayAs: selectedDate)
-                                    
-                                    let daysDiff = Calendar.current.dateComponents([.day], from: Calendar.current.startOfDay(for: Date()), to: Calendar.current.startOfDay(for: date)).day ?? 0
-                                    let isForecastAvailable = (daysDiff >= -1 && daysDiff <= 7)
-                                    
-                                    // Extremely explicit type-checking values
-                                    var textColor: Color = .white
-                                    if isSelected {
-                                        textColor = .black
-                                    } else if isToday {
-                                        textColor = .teal
-                                    } else if !isForecastAvailable {
-                                        textColor = Color.white.opacity(0.65)
-                                    }
-                                    
-                                    var cellBg: Color = Color.white.opacity(0.02)
-                                    if isSelected {
-                                        cellBg = .white
-                                    } else if isForecastAvailable {
-                                        cellBg = colorForActivity(activity).opacity(0.3)
-                                    }
-                                    
-                                    var strokeColor: Color = Color.teal
-                                    if !isToday || isSelected {
-                                        let baseColor = colorForActivity(activity)
-                                        let borderOpacity = isForecastAvailable ? 1.0 : 0.45
-                                        strokeColor = baseColor.opacity(borderOpacity)
-                                    }
-                                    
-                                    let dashPattern: [CGFloat] = isForecastAvailable ? [] : [4.0, 3.0]
-                                    
-                                    VStack(spacing: 2) {
-                                        Text("\(Calendar.current.component(.day, from: date))")
-                                            .font(.footnote)
-                                            .fontWeight(isSelected ? .bold : (isToday ? .bold : .medium))
-                                            .foregroundColor(textColor)
-                                        
-                                        if isToday {
-                                            Circle()
-                                                .fill(isSelected ? Color.black : Color.teal)
-                                                .frame(width: 4, height: 4)
-                                        }
-                                    }
-                                    .frame(height: 32)
-                                    .frame(maxWidth: .infinity)
-                                    .background(
-                                        RoundedRectangle(cornerRadius: 8)
-                                            .fill(cellBg)
-                                    )
-                                    .overlay(
-                                        RoundedRectangle(cornerRadius: 8)
-                                            .stroke(
-                                                strokeColor,
-                                                style: StrokeStyle(
-                                                    lineWidth: isSelected ? 2.5 : (isToday ? 2.0 : 1.0),
-                                                    lineCap: .round,
-                                                    lineJoin: .round,
-                                                    dash: dashPattern
-                                                )
-                                            )
-                                    )
-                                    .onTapGesture {
-                                            selectedDate = date
-                                            calculateForecast()
-                                            updateWeatherAutomatically()
-                                }
-                            }
-                        }
-                        
-                        // Legenda del calendario
-                        calendarLegend
-                    }
-                    .padding()
-                        .background(Color.white.opacity(0.04))
-                        .cornerRadius(16)
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 16)
-                                .stroke(Color.white.opacity(0.08), lineWidth: 1)
-                        )
-                        .padding(.horizontal)
+                        efficacyCalendarCard
                         
                         if let forecast = forecast {
                             
@@ -929,6 +789,148 @@ struct ContentView: View {
         case .moltoAlta: return .green
         }
     }
+    private var efficacyCalendarCard: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack {
+                Image(systemName: "calendar")
+                    .foregroundColor(.teal)
+                    .font(.headline)
+                Text("Calendario Efficacia")
+                    .font(.headline)
+                    .foregroundColor(.white)
+                Spacer()
+                HStack(spacing: 8) {
+                    Button(action: { changeMonth(by: -1) }) {
+                        Image(systemName: "chevron.left")
+                            .foregroundColor(.teal)
+                            .fontWeight(.bold)
+                            .padding(6)
+                            .background(Color.white.opacity(0.06))
+                            .cornerRadius(6)
+                    }
+                    
+                    Text(monthYearString(for: selectedDate))
+                        .font(.subheadline)
+                        .fontWeight(.bold)
+                        .foregroundColor(.white)
+                        .frame(minWidth: 95, alignment: .center)
+                    
+                    Button(action: { changeMonth(by: 1) }) {
+                        Image(systemName: "chevron.right")
+                            .foregroundColor(.teal)
+                            .fontWeight(.bold)
+                            .padding(6)
+                            .background(Color.white.opacity(0.06))
+                            .cornerRadius(6)
+                    }
+                }
+            }
+            
+            // Days of week header
+            HStack(spacing: 0) {
+                ForEach(["Lu", "Ma", "Me", "Gi", "Ve", "Sa", "Do"], id: \.self) { day in
+                    Text(day)
+                        .font(.caption2)
+                        .fontWeight(.bold)
+                        .foregroundColor(.white.opacity(0.4))
+                        .frame(maxWidth: .infinity)
+                }
+            }
+            
+            let days = calendarDays
+            let firstDayOfWeek = Calendar.current.component(.weekday, from: days.first ?? Date())
+            let leadingEmptySlots = (firstDayOfWeek + 5) % 7
+            
+            LazyVGrid(columns: columns, spacing: 6) {
+                ForEach(0..<leadingEmptySlots, id: \.self) { _ in
+                    Color.clear
+                        .frame(height: 32)
+                }
+                
+                ForEach(days, id: \.self) { date in
+                    let activity = activityForDate(date)
+                    let isToday = Calendar.current.isDate(date, inSameDayAs: Date())
+                    let isSelected = Calendar.current.isDate(date, inSameDayAs: selectedDate)
+                    
+                    let daysDiff = Calendar.current.dateComponents([.day], from: Calendar.current.startOfDay(for: Date()), to: Calendar.current.startOfDay(for: date)).day ?? 0
+                    let isForecastAvailable = (daysDiff >= -1 && daysDiff <= 7)
+                    
+                    // Extremely explicit type-checking values
+                    var textColor: Color = .white
+                    if isSelected {
+                        textColor = .black
+                    } else if isToday {
+                        textColor = .teal
+                    } else if !isForecastAvailable {
+                        textColor = Color.white.opacity(0.65)
+                    }
+                    
+                    var cellBg: Color = Color.white.opacity(0.02)
+                    if isSelected {
+                        cellBg = .white
+                    } else if isForecastAvailable {
+                        cellBg = colorForActivity(activity).opacity(0.3)
+                    }
+                    
+                    var strokeColor: Color = Color.teal
+                    if !isToday || isSelected {
+                        let baseColor = colorForActivity(activity)
+                        let borderOpacity = isForecastAvailable ? 1.0 : 0.45
+                        strokeColor = baseColor.opacity(borderOpacity)
+                    }
+                    
+                    let dashPattern: [CGFloat] = isForecastAvailable ? [] : [4.0, 3.0]
+                    
+                    VStack(spacing: 2) {
+                        Text("\(Calendar.current.component(.day, from: date))")
+                            .font(.footnote)
+                            .fontWeight(isSelected ? .bold : (isToday ? .bold : .medium))
+                            .foregroundColor(textColor)
+                        
+                        if isToday {
+                            Circle()
+                                .fill(isSelected ? Color.black : Color.teal)
+                                .frame(width: 4, height: 4)
+                        }
+                    }
+                    .frame(height: 32)
+                    .frame(maxWidth: .infinity)
+                    .background(
+                        RoundedRectangle(cornerRadius: 8)
+                            .fill(cellBg)
+                    )
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 8)
+                            .stroke(
+                                strokeColor,
+                                style: StrokeStyle(
+                                    lineWidth: isSelected ? 2.5 : (isToday ? 2.0 : 1.0),
+                                    lineCap: .round,
+                                    lineJoin: .round,
+                                    dash: dashPattern
+                                )
+                            )
+                    )
+                    .onTapGesture {
+                        selectedDate = date
+                        calculateForecast()
+                        updateWeatherAutomatically()
+                    }
+                }
+            }
+            
+            // Legenda del calendario
+            calendarLegend
+        }
+        .padding()
+        .background(Color.white.opacity(0.04))
+        .cornerRadius(16)
+        .overlay(
+            RoundedRectangle(cornerRadius: 16)
+                .stroke(Color.white.opacity(0.08), lineWidth: 1)
+        )
+        .padding(.horizontal)
+    }
     
     private var calendarLegend: some View {
         VStack(alignment: .leading, spacing: 8) {
@@ -947,7 +949,10 @@ struct ContentView: View {
                     HStack(spacing: 4) {
                         RoundedRectangle(cornerRadius: 3)
                             .fill(Color.white.opacity(0.15))
-                            .stroke(Color.white.opacity(0.8), lineWidth: 1)
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 3)
+                                    .stroke(Color.white.opacity(0.8), lineWidth: 1)
+                            )
                             .frame(width: 12, height: 12)
                         Text("Previsioni Reali").font(.system(size: 9)).foregroundColor(.white.opacity(0.7))
                     }
@@ -955,7 +960,10 @@ struct ContentView: View {
                     HStack(spacing: 4) {
                         RoundedRectangle(cornerRadius: 3)
                             .fill(Color.clear)
-                            .stroke(Color.white.opacity(0.4), style: StrokeStyle(lineWidth: 1, dash: [4, 3]))
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 3)
+                                    .stroke(Color.white.opacity(0.4), style: StrokeStyle(lineWidth: 1, dash: [4, 3]))
+                            )
                             .frame(width: 12, height: 12)
                         Text("Stima Climatologica").font(.system(size: 9)).foregroundColor(.white.opacity(0.7))
                     }
