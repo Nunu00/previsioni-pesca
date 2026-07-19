@@ -790,7 +790,11 @@ struct ContentView: View {
         }
     }
     private var efficacyCalendarCard: some View {
-        VStack(alignment: .leading, spacing: 12) {
+        let days = calendarDays
+        let firstDayOfWeek = Calendar.current.component(.weekday, from: days.first ?? Date())
+        let leadingEmptySlots = (firstDayOfWeek + 5) % 7
+        
+        return VStack(alignment: .leading, spacing: 12) {
             HStack {
                 Image(systemName: "calendar")
                     .foregroundColor(.teal)
@@ -836,11 +840,6 @@ struct ContentView: View {
                         .frame(maxWidth: .infinity)
                 }
             }
-            
-            let days = calendarDays
-            let firstDayOfWeek = Calendar.current.component(.weekday, from: days.first ?? Date())
-            let leadingEmptySlots = (firstDayOfWeek + 5) % 7
-            
             LazyVGrid(columns: columns, spacing: 6) {
                 ForEach(0..<leadingEmptySlots, id: \.self) { _ in
                     Color.clear
