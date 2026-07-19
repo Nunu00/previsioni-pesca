@@ -47,14 +47,36 @@ struct ContentView: View {
     }
     
     private func activityForDate(_ date: Date) -> ActivityLevel {
+        let calendar = Calendar.current
+        let startOfDay = calendar.startOfDay(for: date)
+        let coord = selectedLocation.coordinate
+        
+        let astro = AstronomyEngine.calculateAstronomy(date: startOfDay, coordinate: coord)
+        let tides = TideEngine.calculateDailyTides(date: startOfDay, coordinate: coord)
+        let weatherFactor = WeatherFactor(
+            cloudCoverPercent: 0,
+            windDirectionChange: 0,
+            swellHeight: 0,
+            surfaceTempDelta24h: 0
+        )
         let temp = Double(waterTempCelsius)
-        let forecast = RulesEngine.evaluateForecast(
-            date: date,
+        
+        let forecastResult = RulesEngine.evaluateForecast(
+            date: startOfDay,
             location: selectedLocation,
-            weather: WeatherFactor(cloudCoverPercent: 0, windDirectionChange: 0, swellHeight: 0, surfaceTempDelta24h: 0),
+            sunrise: astro.sunrise,
+            sunset: astro.sunset,
+            moonrise: astro.moonrise,
+            moonset: astro.moonset,
+            moonTransit: astro.moonTransit,
+            moonAntiTransit: astro.moonAntiTransit,
+            moonAge: astro.moonAge,
+            tides: tides,
+            weather: weatherFactor,
             waterTempCelsius: temp
         )
-        return forecast.dailyActivity
+        
+        return forecastResult.dailyActivity
     }
     
     private func monthYearString(for date: Date) -> String {
