@@ -794,6 +794,21 @@ struct ContentView: View {
         let firstDayOfWeek = Calendar.current.component(.weekday, from: days.first ?? Date())
         let leadingEmptySlots = (firstDayOfWeek + 5) % 7
         
+        // Find indices of forecast available days in the grid space
+        var startIdx: Int? = nil
+        var endIdx: Int? = nil
+        
+        for (index, d) in days.enumerated() {
+            let daysDiff = Calendar.current.dateComponents([.day], from: Calendar.current.startOfDay(for: Date()), to: Calendar.current.startOfDay(for: d)).day ?? 0
+            if daysDiff >= -1 && daysDiff <= 7 {
+                let gridIdx = leadingEmptySlots + index
+                if startIdx == nil {
+                    startIdx = gridIdx
+                }
+                endIdx = gridIdx
+            }
+        }
+        
         return VStack(alignment: .leading, spacing: 12) {
             HStack {
                 Image(systemName: "calendar")
@@ -840,14 +855,15 @@ struct ContentView: View {
                         .frame(maxWidth: .infinity)
                 }
             }
+            
             LazyVGrid(columns: columns, spacing: 6) {
                 ForEach(0..<leadingEmptySlots, id: \.self) { _ in
                     Color.clear
                         .frame(height: 32)
                 }
                 
-                ForEach(days, id: \.self) { date in
-                    calendarCell(for: date)
+                ForEach(Array(days.enumerated()), id: \.offset) { index, date in
+                    calendarCell(for: date, gridIdx: leadingEmptySlots + index, startIdx: startIdx, endIdx: endIdx)
                 }
             }
             
@@ -864,41 +880,30 @@ struct ContentView: View {
         .padding(.horizontal)
     }
     
-    private func calendarCell(for date: Date) -> some View {
+    private func calendarCell(for date: Date, gridIdx: Int, startIdx: Int?, endIdx: Int?) -> some View {
         let activity = activityForDate(date)
         let isToday = Calendar.current.isDate(date, inSameDayAs: Date())
         let isSelected = Calendar.current.isDate(date, inSameDayAs: selectedDate)
         
-        let daysDiff = Calendar.current.dateComponents([.day], from: Calendar.current.startOfDay(for: Date()), to: Calendar.current.startOfDay(for: date)).day ?? 0
-        let isForecastAvailable = (daysDiff >= -1 && daysDiff <= 7)
+        // Background color is always the activity color, filled and colored as before!
+        let cellBg: Color = isSelected ? .white : colorForActivity(activity).opacity(0.25)
         
-        // Explicitly typed styles
-        var textColor: Color = .white
-        if isSelected {
-            textColor = .black
-        } else if isToday {
-            textColor = .teal
-        } else if !isForecastAvailable {
-            textColor = Color.white.opacity(0.65)
-        }
+        // Text color
+        let textColor: Color = isSelected ? .black : (isToday ? .teal : .white)
         
-        var cellBg: Color = Color.white.opacity(0.02)
-        if isSelected {
-            cellBg = .white
-        } else if isForecastAvailable {
-            cellBg = colorForActivity(activity).opacity(0.3)
-        }
+        // Enclosing border overlay calculations
+        let isInForecast = startIdx != nil && endIdx != nil && gridIdx >= startIdx! && gridIdx <= endIdx!
         
-        var strokeColor: Color = Color.teal
-        if !isToday || isSelected {
-            let baseColor = colorForActivity(activity)
-            let borderOpacity = isForecastAvailable ? 1.0 : 0.45
-            strokeColor = baseColor.opacity(borderOpacity)
-        }
+        var topBorder = false
+        var bottomBorder = false
+        var leftBorder = false
+        var rightBorder = false
         
-        var dashPattern: [CGFloat] = []
-        if !isForecastAvailable {
-            dashPattern = [4.0, 3.0]
+        if isInForecast, let start = startIdx, let end = endIdx {
+            topBorder = (gridIdx - 7 < start)
+            bottomBorder = (gridIdx + 7 > end)
+            leftBorder = (gridIdx - 1 < start || gridIdx % 7 == 0)
+            rightBorder = (gridIdx + 1 > end || gridIdx % 7 == 6)
         }
         
         return VStack(spacing: 2) {
@@ -920,16 +925,28 @@ struct ContentView: View {
                 .fill(cellBg)
         )
         .overlay(
-            RoundedRectangle(cornerRadius: 8)
-                .stroke(
-                    strokeColor,
-                    style: StrokeStyle(
-                        lineWidth: isSelected ? 2.5 : (isToday ? 2.0 : 1.0),
-                        lineCap: .round,
-                        lineJoin: .round,
-                        dash: dashPattern
+            // Show custom enclosing border for forecast days
+            Group {
+                if isInForecast {
+                    ForecastBorderOverlay(
+                        top: topBorder,
+                        bottom: bottomBorder,
+                        left: leftBorder,
+                        right: rightBorder,
+                        color: Color.teal,
+                        lineWidth: 2.0
                     )
-                )
+                }
+            }
+        )
+        .overlay(
+            // Highlight today with a clean teal border (if not selected and not already in forecast border)
+            Group {
+                if isToday && !isSelected {
+                    RoundedRectangle(cornerRadius: 8)
+                        .stroke(Color.teal, lineWidth: 2.0)
+                }
+            }
         )
         .onTapGesture {
             selectedDate = date
@@ -954,24 +971,20 @@ struct ContentView: View {
                 VStack(alignment: .leading, spacing: 4) {
                     HStack(spacing: 4) {
                         RoundedRectangle(cornerRadius: 3)
-                            .fill(Color.white.opacity(0.15))
+                            .fill(Color.teal.opacity(0.15))
                             .overlay(
                                 RoundedRectangle(cornerRadius: 3)
-                                    .stroke(Color.white.opacity(0.8), lineWidth: 1)
+                                    .stroke(Color.teal, lineWidth: 1.5)
                             )
                             .frame(width: 12, height: 12)
-                        Text("Previsioni Reali").font(.system(size: 9)).foregroundColor(.white.opacity(0.7))
+                        Text("Previsioni Reali (racchiuse da bordo)").font(.system(size: 9)).foregroundColor(.white.opacity(0.7))
                     }
                     
                     HStack(spacing: 4) {
                         RoundedRectangle(cornerRadius: 3)
-                            .fill(Color.clear)
-                            .overlay(
-                                RoundedRectangle(cornerRadius: 3)
-                                    .stroke(Color.white.opacity(0.4), style: StrokeStyle(lineWidth: 1, dash: [4, 3]))
-                            )
+                            .fill(Color.white.opacity(0.15))
                             .frame(width: 12, height: 12)
-                        Text("Stima Climatologica").font(.system(size: 9)).foregroundColor(.white.opacity(0.7))
+                        Text("Stima Climatologica (senza bordo)").font(.system(size: 9)).foregroundColor(.white.opacity(0.7))
                     }
                     
                     HStack(spacing: 4) {
@@ -1189,6 +1202,42 @@ struct FactorRow: View {
                 .fontWeight(.bold)
         }
         .padding(.vertical, 4)
+    }
+}
+
+struct ForecastBorderOverlay: View {
+    var top: Bool
+    var bottom: Bool
+    var left: Bool
+    var right: Bool
+    var color: Color
+    var lineWidth: CGFloat
+    
+    var body: some View {
+        GeometryReader { geo in
+            Path { path in
+                let w = geo.size.width
+                let h = geo.size.height
+                
+                if top {
+                    path.move(to: CGPoint(x: 0, y: 0))
+                    path.addLine(to: CGPoint(x: w, y: 0))
+                }
+                if bottom {
+                    path.move(to: CGPoint(x: 0, y: h))
+                    path.addLine(to: CGPoint(x: w, y: h))
+                }
+                if left {
+                    path.move(to: CGPoint(x: 0, y: 0))
+                    path.addLine(to: CGPoint(x: 0, y: h))
+                }
+                if right {
+                    path.move(to: CGPoint(x: w, y: 0))
+                    path.addLine(to: CGPoint(x: w, y: h))
+                }
+            }
+            .stroke(color, lineWidth: lineWidth)
+        }
     }
 }
 
