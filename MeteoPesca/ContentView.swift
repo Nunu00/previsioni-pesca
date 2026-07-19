@@ -901,10 +901,8 @@ struct ContentView: View {
         }
         .frame(height: 32)
         .frame(maxWidth: .infinity)
-        .background(
-            RoundedRectangle(cornerRadius: 8)
-                .fill(cellBgView)
-        )
+        .background(cellBgView)
+        .cornerRadius(8)
         .overlay(
             Group {
                 if isToday && !isSelected {
@@ -935,16 +933,16 @@ struct ContentView: View {
             HStack(alignment: .top, spacing: 16) {
                 VStack(alignment: .leading, spacing: 4) {
                     HStack(spacing: 4) {
-                        RoundedRectangle(cornerRadius: 3)
-                            .fill(Color.teal.opacity(0.8))
+                        Color.teal.opacity(0.8)
                             .frame(width: 12, height: 12)
+                            .cornerRadius(3)
                         Text("Previsioni Reali (Saturazione max)").font(.system(size: 9)).foregroundColor(.white.opacity(0.7))
                     }
                     
                     HStack(spacing: 4) {
-                        RoundedRectangle(cornerRadius: 3)
-                            .fill(Color.teal.saturation(0.4).opacity(0.18))
+                        Color.teal.saturation(0.4).opacity(0.18)
                             .frame(width: 12, height: 12)
+                            .cornerRadius(3)
                         Text("Stima Climatologica (Trasparente)").font(.system(size: 9)).foregroundColor(.white.opacity(0.7))
                     }
                     
