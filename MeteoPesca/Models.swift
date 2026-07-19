@@ -53,24 +53,27 @@ public struct SolunarPeriod: Identifiable, Codable, Hashable {
 
 public enum ActivityLevel: String, Codable, CaseIterable {
     case bassa = "Bassa"
-    case media = "Media"
+    case moderata = "Moderata"
+    case buona = "Buona"
     case alta = "Alta"
     case moltoAlta = "Molto Alta"
     
     public var score: Int {
         switch self {
         case .bassa: return 0
-        case .media: return 1
-        case .alta: return 2
-        case .moltoAlta: return 3
+        case .moderata: return 1
+        case .buona: return 2
+        case .alta: return 3
+        case .moltoAlta: return 4
         }
     }
     
     public var description: String {
         switch self {
         case .bassa: return "Attività Bassa"
-        case .media: return "Attività Media"
-        case .alta: return "Attività Alta 🎣"
+        case .moderata: return "Attività Moderata"
+        case .buona: return "Attività Buona 🎣"
+        case .alta: return "Attività Alta! 🎣"
         case .moltoAlta: return "Attività Eccezionale! 🔥"
         }
     }

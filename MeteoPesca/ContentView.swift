@@ -69,34 +69,27 @@ struct ContentView: View {
             delta = cached.surfaceTempDelta24h
             sst = cached.waterTemp
         } else {
-            let month = calendar.component(.month, from: startOfDay)
-            var seasonalWaterTemp = 20.0
-            switch month {
-            case 1, 2: seasonalWaterTemp = 13.0
-            case 3: seasonalWaterTemp = 14.0
-            case 4: seasonalWaterTemp = 16.0
-            case 5: seasonalWaterTemp = 18.0
-            case 6: seasonalWaterTemp = 22.0
-            case 7: seasonalWaterTemp = 25.0
-            case 8: seasonalWaterTemp = 26.0
-            case 9: seasonalWaterTemp = 24.0
-            case 10: seasonalWaterTemp = 21.0
-            case 11: seasonalWaterTemp = 18.0
-            case 12: seasonalWaterTemp = 15.0
-            default: seasonalWaterTemp = 20.0
-            }
-            
             let today = Date()
             let daysDifference = calendar.dateComponents([.day], from: calendar.startOfDay(for: today), to: startOfDay).day ?? 0
-            let todayKey = cacheKeyFormatter.string(from: today)
-            let currentSst = weatherCache[todayKey]?.waterTemp ?? 20.0
+            let seasonalWaterTemp = climatologicalMean(for: startOfDay)
             
             if daysDifference < -1 {
                 sst = seasonalWaterTemp
             } else {
-                let transitionDays = Double(daysDifference - 7)
-                let blendFactor = min(1.0, max(0.0, transitionDays / 7.0))
-                sst = currentSst + (seasonalWaterTemp - currentSst) * blendFactor
+                // SST Anomaly Persistence Forecast (exponential decay with decorrelationTime = 15 days)
+                let todayKey = cacheKeyFormatter.string(from: today)
+                let currentSst = weatherCache[todayKey]?.waterTemp ?? 20.0
+                
+                // Anomaly evaluated at Day 7 (end of forecast window) to guarantee continuity
+                let day7Date = calendar.date(byAdding: .day, value: 7, to: today) ?? today
+                let day7Key = cacheKeyFormatter.string(from: day7Date)
+                let day7SST = weatherCache[day7Key]?.waterTemp ?? currentSst
+                let day7Climatology = climatologicalMean(for: day7Date)
+                let anomalyAtDay7 = day7SST - day7Climatology
+                
+                let daysAhead = Double(daysDifference - 7)
+                let decayFactor = exp(-daysAhead / 15.0)
+                sst = seasonalWaterTemp + anomalyAtDay7 * decayFactor
             }
         }
         
@@ -145,6 +138,14 @@ struct ContentView: View {
         let formatter = DateFormatter()
         formatter.dateFormat = "yyyy-MM-dd"
         return formatter
+    }
+    
+    private func climatologicalMean(for date: Date) -> Double {
+        let calendar = Calendar.current
+        let dayOfYear = Double(calendar.ordinality(of: .day, in: .year, for: date) ?? 180)
+        let angle = (dayOfYear - 230.0) / 365.0 * 2.0 * Double.pi
+        let meanSst = 19.5 + 6.5 * cos(angle)
+        return meanSst
     }
     
     private let columns = Array(repeating: GridItem(.flexible(), spacing: 4), count: 7)
@@ -361,7 +362,7 @@ struct ContentView: View {
                                     .shadow(color: colorForActivity(forecast.dailyActivity).opacity(0.5), radius: 8)
                                 
                                 HStack(spacing: 8) {
-                                    ForEach(0..<3) { idx in
+                                    ForEach(0..<4) { idx in
                                         Image(systemName: "fish.fill")
                                             .font(.title2)
                                             .foregroundColor(idx < forecast.dailyActivity.score ? colorForActivity(forecast.dailyActivity) : Color.white.opacity(0.2))
@@ -814,25 +815,7 @@ struct ContentView: View {
         let startOfSelected = calendar.startOfDay(for: selectedDate)
         let daysDifference = calendar.dateComponents([.day], from: startOfToday, to: startOfSelected).day ?? 0
         
-        // 1. Get Climatological Temperature for the selected month
-        let month = calendar.component(.month, from: selectedDate)
-        var seasonalWaterTemp = 20.0
-        switch month {
-        case 1, 2: seasonalWaterTemp = 13.0
-        case 3: seasonalWaterTemp = 14.0
-        case 4: seasonalWaterTemp = 16.0
-        case 5: seasonalWaterTemp = 18.0
-        case 6: seasonalWaterTemp = 22.0
-        case 7: seasonalWaterTemp = 25.0
-        case 8: seasonalWaterTemp = 26.0
-        case 9: seasonalWaterTemp = 24.0
-        case 10: seasonalWaterTemp = 21.0
-        case 11: seasonalWaterTemp = 18.0
-        case 12: seasonalWaterTemp = 15.0
-        default: seasonalWaterTemp = 20.0
-        }
-        
-        // 2. Fetch today's temperature (or the latest available in forecast) to blend from
+        let seasonalWaterTemp = climatologicalMean(for: startOfSelected)
         let todayKey = cacheKeyFormatter.string(from: today)
         let currentSst = weatherCache[todayKey]?.waterTemp ?? 20.0
         
@@ -856,16 +839,25 @@ struct ContentView: View {
                 self.waterTempCelsius = seasonalWaterTemp
                 self.weatherErrorMessage = "* Mostrati parametri medi climatologici storici (data passata)."
             } else {
-                // Future date beyond 7 days: smoothly blend from last forecast (currentSst) to climatological average (seasonalWaterTemp) over a 7-day transition period!
-                let transitionDays = Double(daysDifference - 7)
-                let blendFactor = min(1.0, max(0.0, transitionDays / 7.0)) // blends from 0.0 (at day 7) to 1.0 (at day 14)
-                let blendedTemp = currentSst + (seasonalWaterTemp - currentSst) * blendFactor
+                // Future date beyond 7 days: Anomaly Persistence Forecast with exponential decay (15 days time scale)
+                // Anomaly evaluated at Day 7 to guarantee continuity
+                let day7Date = calendar.date(byAdding: .day, value: 7, to: today) ?? today
+                let day7Key = cacheKeyFormatter.string(from: day7Date)
+                let day7SST = weatherCache[day7Key]?.waterTemp ?? currentSst
+                let day7Climatology = climatologicalMean(for: day7Date)
+                let anomalyAtDay7 = day7SST - day7Climatology
                 
-                self.waterTempCelsius = blendedTemp
-                if blendFactor < 1.0 {
-                    self.weatherErrorMessage = String(format: "* Transizione termica: %.1f°C sfumata verso la media climatologica.", blendedTemp)
+                let daysAhead = Double(daysDifference - 7)
+                let decayFactor = exp(-daysAhead / 15.0)
+                let projectedSst = seasonalWaterTemp + anomalyAtDay7 * decayFactor
+                
+                self.waterTempCelsius = projectedSst
+                
+                let anomalyPercent = Int(round(decayFactor * 100.0))
+                if anomalyPercent > 10 {
+                    self.weatherErrorMessage = String(format: "* Anomalia termica persistente al %d%% (temperatura prevista: %.1f°C).", anomalyPercent, projectedSst)
                 } else {
-                    self.weatherErrorMessage = "* Mostrati parametri medi climatologici storici (data lontana)."
+                    self.weatherErrorMessage = "* Temperatura allineata alla media climatologica storica (data lontana)."
                 }
             }
         }
@@ -881,7 +873,8 @@ struct ContentView: View {
     private func colorForActivity(_ level: ActivityLevel) -> Color {
         switch level {
         case .bassa: return .gray
-        case .media: return .yellow
+        case .moderata: return .cyan
+        case .buona: return .yellow
         case .alta: return .orange
         case .moltoAlta: return .green
         }

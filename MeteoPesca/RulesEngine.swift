@@ -138,11 +138,13 @@ public class RulesEngine {
             
             // Map score to Activity level
             let level: ActivityLevel
-            if hourScore < 1.0 {
+            if hourScore < 0.6 {
                 level = .bassa
+            } else if hourScore < 1.2 {
+                level = .moderata
             } else if hourScore < 1.8 {
-                level = .media
-            } else if hourScore < 2.8 {
+                level = .buona
+            } else if hourScore < 2.5 {
                 level = .alta
             } else {
                 level = .moltoAlta
@@ -199,11 +201,13 @@ public class RulesEngine {
         // Map continuous score to daily activity level using optimized thresholds:
         // T1 = 0.166, T2 = 0.416, T3 = 1.288
         let dailyLevel: ActivityLevel
-        if score < 0.166 {
+        if score < 0.45 {
             dailyLevel = .bassa
-        } else if score < 0.416 {
-            dailyLevel = .media
-        } else if score < 1.288 {
+        } else if score < 0.90 {
+            dailyLevel = .moderata
+        } else if score < 1.26 {
+            dailyLevel = .buona
+        } else if score < 1.62 {
             dailyLevel = .alta
         } else {
             dailyLevel = .moltoAlta
