@@ -794,21 +794,6 @@ struct ContentView: View {
         let firstDayOfWeek = Calendar.current.component(.weekday, from: days.first ?? Date())
         let leadingEmptySlots = (firstDayOfWeek + 5) % 7
         
-        // Find indices of forecast available days in the grid space
-        var startIdx: Int? = nil
-        var endIdx: Int? = nil
-        
-        for (index, d) in days.enumerated() {
-            let daysDiff = Calendar.current.dateComponents([.day], from: Calendar.current.startOfDay(for: Date()), to: Calendar.current.startOfDay(for: d)).day ?? 0
-            if daysDiff >= -1 && daysDiff <= 7 {
-                let gridIdx = leadingEmptySlots + index
-                if startIdx == nil {
-                    startIdx = gridIdx
-                }
-                endIdx = gridIdx
-            }
-        }
-        
         return VStack(alignment: .leading, spacing: 12) {
             HStack {
                 Image(systemName: "calendar")
@@ -862,8 +847,11 @@ struct ContentView: View {
                         .frame(height: 32)
                 }
                 
-                ForEach(Array(days.enumerated()), id: \.offset) { index, date in
-                    calendarCell(for: date, gridIdx: leadingEmptySlots + index, startIdx: startIdx, endIdx: endIdx)
+                ForEach(days, id: \.self) { date in
+                    let daysDiff = Calendar.current.dateComponents([.day], from: Calendar.current.startOfDay(for: Date()), to: Calendar.current.startOfDay(for: date)).day ?? 0
+                    let isForecastAvailable = (daysDiff >= -1 && daysDiff <= 7)
+                    
+                    calendarCell(for: date, isForecastAvailable: isForecastAvailable)
                 }
             }
             
@@ -880,30 +868,23 @@ struct ContentView: View {
         .padding(.horizontal)
     }
     
-    private func calendarCell(for date: Date, gridIdx: Int, startIdx: Int?, endIdx: Int?) -> some View {
+    private func calendarCell(for date: Date, isForecastAvailable: Bool) -> some View {
         let activity = activityForDate(date)
         let isToday = Calendar.current.isDate(date, inSameDayAs: Date())
         let isSelected = Calendar.current.isDate(date, inSameDayAs: selectedDate)
         
-        // Background color is always the activity color, filled and colored as before!
-        let cellBg: Color = isSelected ? .white : colorForActivity(activity).opacity(0.25)
+        // Text color: Selected is black, Forecast days are white, Climatological days are faded white.
+        let textColor: Color = isSelected ? .black : (isForecastAvailable ? .white : .white.opacity(0.6))
         
-        // Text color
-        let textColor: Color = isSelected ? .black : (isToday ? .teal : .white)
-        
-        // Enclosing border overlay calculations
-        let isInForecast = startIdx != nil && endIdx != nil && gridIdx >= startIdx! && gridIdx <= endIdx!
-        
-        var topBorder = false
-        var bottomBorder = false
-        var leftBorder = false
-        var rightBorder = false
-        
-        if isInForecast, let start = startIdx, let end = endIdx {
-            topBorder = (gridIdx - 7 < start)
-            bottomBorder = (gridIdx + 7 > end)
-            leftBorder = (gridIdx - 1 < start || gridIdx % 7 == 0)
-            rightBorder = (gridIdx + 1 > end || gridIdx % 7 == 6)
+        // Background View
+        let cellBgView = Group {
+            if isSelected {
+                Color.white
+            } else if isForecastAvailable {
+                colorForActivity(activity).opacity(0.8)
+            } else {
+                colorForActivity(activity).saturation(0.4).opacity(0.18)
+            }
         }
         
         return VStack(spacing: 2) {
@@ -914,7 +895,7 @@ struct ContentView: View {
             
             if isToday {
                 Circle()
-                    .fill(isSelected ? Color.black : Color.teal)
+                    .fill(isSelected ? Color.black : (isForecastAvailable ? Color.white : Color.teal))
                     .frame(width: 4, height: 4)
             }
         }
@@ -922,25 +903,9 @@ struct ContentView: View {
         .frame(maxWidth: .infinity)
         .background(
             RoundedRectangle(cornerRadius: 8)
-                .fill(cellBg)
+                .fill(cellBgView)
         )
         .overlay(
-            // Show custom enclosing border for forecast days
-            Group {
-                if isInForecast {
-                    ForecastBorderOverlay(
-                        top: topBorder,
-                        bottom: bottomBorder,
-                        left: leftBorder,
-                        right: rightBorder,
-                        color: Color.teal,
-                        lineWidth: 2.0
-                    )
-                }
-            }
-        )
-        .overlay(
-            // Highlight today with a clean teal border (if not selected and not already in forecast border)
             Group {
                 if isToday && !isSelected {
                     RoundedRectangle(cornerRadius: 8)
@@ -971,20 +936,16 @@ struct ContentView: View {
                 VStack(alignment: .leading, spacing: 4) {
                     HStack(spacing: 4) {
                         RoundedRectangle(cornerRadius: 3)
-                            .fill(Color.teal.opacity(0.15))
-                            .overlay(
-                                RoundedRectangle(cornerRadius: 3)
-                                    .stroke(Color.teal, lineWidth: 1.5)
-                            )
+                            .fill(Color.teal.opacity(0.8))
                             .frame(width: 12, height: 12)
-                        Text("Previsioni Reali (racchiuse da bordo)").font(.system(size: 9)).foregroundColor(.white.opacity(0.7))
+                        Text("Previsioni Reali (Saturazione max)").font(.system(size: 9)).foregroundColor(.white.opacity(0.7))
                     }
                     
                     HStack(spacing: 4) {
                         RoundedRectangle(cornerRadius: 3)
-                            .fill(Color.white.opacity(0.15))
+                            .fill(Color.teal.saturation(0.4).opacity(0.18))
                             .frame(width: 12, height: 12)
-                        Text("Stima Climatologica (senza bordo)").font(.system(size: 9)).foregroundColor(.white.opacity(0.7))
+                        Text("Stima Climatologica (Trasparente)").font(.system(size: 9)).foregroundColor(.white.opacity(0.7))
                     }
                     
                     HStack(spacing: 4) {
@@ -1205,41 +1166,6 @@ struct FactorRow: View {
     }
 }
 
-struct ForecastBorderOverlay: View {
-    var top: Bool
-    var bottom: Bool
-    var left: Bool
-    var right: Bool
-    var color: Color
-    var lineWidth: CGFloat
-    
-    var body: some View {
-        GeometryReader { geo in
-            Path { path in
-                let w = geo.size.width
-                let h = geo.size.height
-                
-                if top {
-                    path.move(to: CGPoint(x: 0, y: 0))
-                    path.addLine(to: CGPoint(x: w, y: 0))
-                }
-                if bottom {
-                    path.move(to: CGPoint(x: 0, y: h))
-                    path.addLine(to: CGPoint(x: w, y: h))
-                }
-                if left {
-                    path.move(to: CGPoint(x: 0, y: 0))
-                    path.addLine(to: CGPoint(x: 0, y: h))
-                }
-                if right {
-                    path.move(to: CGPoint(x: w, y: 0))
-                    path.addLine(to: CGPoint(x: w, y: h))
-                }
-            }
-            .stroke(color, lineWidth: lineWidth)
-        }
-    }
-}
 
 struct ContentView_Previews: PreviewProvider {
     static var previews: some View {
