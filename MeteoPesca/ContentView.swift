@@ -322,7 +322,7 @@ struct ContentView: View {
                                         Text("\(Calendar.current.component(.day, from: date))")
                                             .font(.footnote)
                                             .fontWeight(isSelected ? .bold : (isToday ? .bold : .medium))
-                                            .foregroundColor(isSelected ? .black : (isToday ? .teal : .white))
+                                            .foregroundColor(isSelected ? .black : (isToday ? .teal : (isForecastAvailable ? .white : .white.opacity(0.65))))
                                         
                                         if isToday {
                                             Circle()
@@ -332,20 +332,19 @@ struct ContentView: View {
                                     }
                                     .frame(height: 32)
                                     .frame(maxWidth: .infinity)
-                                    .opacity(isSelected || isToday || isForecastAvailable ? 1.0 : 0.75)
                                     .background(
                                         RoundedRectangle(cornerRadius: 8)
-                                            .fill(isSelected ? Color.white : colorForActivity(activity).opacity(isForecastAvailable ? 0.25 : 0.12))
+                                            .fill(isSelected ? Color.white : (isForecastAvailable ? colorForActivity(activity).opacity(0.3) : Color.white.opacity(0.02)))
                                     )
                                     .overlay(
                                         RoundedRectangle(cornerRadius: 8)
                                             .stroke(
-                                                isToday && !isSelected ? Color.teal : colorForActivity(activity).opacity(isForecastAvailable ? 1.0 : 0.5),
+                                                isToday && !isSelected ? Color.teal : colorForActivity(activity).opacity(isForecastAvailable ? 1.0 : 0.45),
                                                 style: StrokeStyle(
                                                     lineWidth: isSelected ? 2.5 : (isToday ? 2.0 : 1.0),
                                                     lineCap: .round,
                                                     lineJoin: .round,
-                                                    dash: isForecastAvailable ? [] : [2, 2]
+                                                    dash: isForecastAvailable ? [] : [4, 3]
                                                 )
                                             )
                                     )
@@ -373,6 +372,7 @@ struct ContentView: View {
                                     VStack(alignment: .leading, spacing: 4) {
                                         HStack(spacing: 4) {
                                             RoundedRectangle(cornerRadius: 3)
+                                                .fill(Color.white.opacity(0.15))
                                                 .stroke(Color.white.opacity(0.8), lineWidth: 1)
                                                 .frame(width: 12, height: 12)
                                             Text("Previsioni Reali").font(.system(size: 9)).foregroundColor(.white.opacity(0.7))
@@ -380,7 +380,8 @@ struct ContentView: View {
                                         
                                         HStack(spacing: 4) {
                                             RoundedRectangle(cornerRadius: 3)
-                                                .stroke(Color.white.opacity(0.4), style: StrokeStyle(lineWidth: 1, dash: [2, 2]))
+                                                .fill(Color.clear)
+                                                .stroke(Color.white.opacity(0.4), style: StrokeStyle(lineWidth: 1, dash: [4, 3]))
                                                 .frame(width: 12, height: 12)
                                             Text("Stima Climatologica").font(.system(size: 9)).foregroundColor(.white.opacity(0.7))
                                         }
