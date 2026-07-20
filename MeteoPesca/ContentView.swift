@@ -1273,15 +1273,17 @@ struct TideChartView: View {
                     let h = TideEngine.calculateHeight(at: best.peak, coordinate: coord)
                     let drawY = height / 2 - CGFloat(h) * CGFloat(scaleY)
                     
-                    // Draw Star
-                    let starImage = Image(systemName: "star.fill")
-                    context.draw(starImage, at: CGPoint(x: drawX, y: drawY - 14))
-                    
-                    // Draw TOP text badge
-                    let topText = Text("TOP")
-                        .font(.system(size: 8, weight: .black))
+                    // Draw Star (smaller, golden yellow)
+                    let starText = Text(Image(systemName: "star.fill"))
+                        .font(.system(size: 8))
                         .foregroundColor(.yellow)
-                    context.draw(topText, at: CGPoint(x: drawX, y: drawY - 26))
+                    context.draw(starText, at: CGPoint(x: drawX, y: drawY - 8))
+                    
+                    // Draw TOP text badge (smaller, bold)
+                    let topText = Text("TOP")
+                        .font(.system(size: 7, weight: .bold))
+                        .foregroundColor(.yellow)
+                    context.draw(topText, at: CGPoint(x: drawX, y: drawY - 16))
                 }
                 
                 // Mark tide events (highs / lows)
