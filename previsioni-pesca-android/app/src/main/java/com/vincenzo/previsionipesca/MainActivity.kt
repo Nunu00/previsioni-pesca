@@ -7,9 +7,9 @@ import androidx.compose.animation.*
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.grid.GridCells
-import androidx.compose.foundation.lazy.grid.LazyVGrid
-import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.ui.geometry.Size
+import androidx.compose.runtime.rememberCoroutineScope
+import kotlinx.coroutines.launch
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
@@ -244,6 +244,7 @@ fun SplashScreen() {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MainScreen() {
+    val scope = rememberCoroutineScope()
     var selectedLocation by remember { mutableStateOf(TideEngine.stations[0]) }
     var selectedDate by remember { mutableStateOf(Date()) }
     var weatherCache by remember { mutableStateOf<Map<String, FetchedWeatherData>>(emptyMap()) }
@@ -266,7 +267,7 @@ fun MainScreen() {
         isFetchingWeather = true
         weatherErrorMessage = null
         try {
-            val cache = WeatherService.fetch7DayWeather(selectedLocation.latitude, selectedLocation.longitude)
+            val cache = WeatherService.fetch7DayWeather(selectedLocation.coordinate.latitude, selectedLocation.coordinate.longitude)
             weatherCache = cache
             isFetchingWeather = false
         } catch (e: Exception) {
@@ -430,16 +431,14 @@ fun MainScreen() {
                 onRefresh = {
                     isFetchingWeather = true
                     weatherErrorMessage = null
-                    val job = kotlinx.coroutines.GlobalScope.run {
-                        kotlinx.coroutines.launch {
-                            try {
-                                val cache = WeatherService.fetch7DayWeather(selectedLocation.latitude, selectedLocation.longitude)
-                                weatherCache = cache
-                                isFetchingWeather = false
-                            } catch (e: Exception) {
-                                weatherErrorMessage = "Impossibile caricare il meteo."
-                                isFetchingWeather = false
-                            }
+                    scope.launch {
+                        try {
+                            val cache = WeatherService.fetch7DayWeather(selectedLocation.coordinate.latitude, selectedLocation.coordinate.longitude)
+                            weatherCache = cache
+                            isFetchingWeather = false
+                        } catch (e: Exception) {
+                            weatherErrorMessage = "Impossibile caricare il meteo."
+                            isFetchingWeather = false
                         }
                     }
                 }
@@ -844,7 +843,7 @@ fun DailyActivitySummaryCard(forecast: DailyForecast) {
 
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceAround) {
                 AstroItem(label = "🌓 Fase Lunare", value = forecast.moonPhase)
-                AstroItem(label = "🎚️ Coeff. Marea", value = "${forecast.tideCoeffFactor.let { max(20, min(120, (70.0 + 30.0 * cos(4.0 * Math.PI * (forecast.moonAge / 29.53059)) + ( (406700.0 - forecast.moonAntiTransit?.let { 384400.0 } /*approx*/ ?: 384400.0) / 50300.0 - 0.5 ) * 30.0)).toInt() }}") // Display formatted actual coeff
+                AstroItem(label = "🎚️ Coeff. Marea", value = "${forecast.tideCoeffFactor.toInt()}") // Display formatted actual coeff
             }
         }
     }
