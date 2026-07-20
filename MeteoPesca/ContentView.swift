@@ -18,6 +18,7 @@ struct ContentView: View {
     @State private var isFetchingWeather: Bool = false
     @State private var weatherErrorMessage: String? = nil
     @State private var weatherCache: [String: FetchedWeatherData] = [:]
+    @State private var isSplashActive: Bool = true
     
     private var dateFormatter: DateFormatter {
         let formatter = DateFormatter()
@@ -161,7 +162,11 @@ struct ContentView: View {
     private let columns = Array(repeating: GridItem(.flexible(), spacing: 4), count: 7)
     
     var body: some View {
-        NavigationView {
+        ZStack {
+            if isSplashActive {
+                splashView
+            } else {
+                NavigationView {
             ZStack {
                 // Deep sea premium dark gradient background
                 LinearGradient(
@@ -724,8 +729,19 @@ struct ContentView: View {
             .onChange(of: swellHeight) { _ in calculateForecast() }
             .onChange(of: surfaceTempDelta24h) { _ in calculateForecast() }
             .onChange(of: waterTempCelsius) { _ in calculateForecast() }
+                }
+            }
         }
         .preferredColorScheme(.dark)
+        .onAppear {
+            calculateForecast()
+            updateWeatherAutomatically()
+            DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
+                withAnimation(.easeOut(duration: 0.5)) {
+                    isSplashActive = false
+                }
+            }
+        }
     }
     
     private func applyCustomCoordinates() {
@@ -1081,6 +1097,62 @@ struct ContentView: View {
             return Color.cyan.opacity(0.06)
         } else {
             return Color.white.opacity(0.02)
+        }
+    }
+    
+    private var splashView: some View {
+        ZStack {
+            LinearGradient(
+                gradient: Gradient(colors: [Color(red: 5/255, green: 11/255, blue: 22/255), Color(red: 15/255, green: 30/255, blue: 55/255)]),
+                startPoint: .top,
+                endPoint: .bottom
+            )
+            .ignoresSafeArea()
+            
+            VStack(spacing: 20) {
+                Spacer()
+                
+                // Branding Icon (using system image but stylized beautifully)
+                ZStack {
+                    Circle()
+                        .fill(Color.white.opacity(0.03))
+                        .frame(width: 130, height: 130)
+                        .overlay(
+                            Circle()
+                                .stroke(Color.teal.opacity(0.15), lineWidth: 1)
+                        )
+                    
+                    Image(systemName: "fish.fill")
+                        .font(.system(size: 60))
+                        .foregroundColor(.teal)
+                        .shadow(color: .teal.opacity(0.4), radius: 10)
+                }
+                
+                VStack(spacing: 8) {
+                    Text("PescAttiva")
+                        .font(.system(size: 36, weight: .black, design: .rounded))
+                        .foregroundColor(.white)
+                        .tracking(1.5)
+                    
+                    Text("Il tuo compagno di pesca scientifico")
+                        .font(.system(size: 14, weight: .medium))
+                        .foregroundColor(.white.opacity(0.6))
+                }
+                
+                Spacer()
+                
+                VStack(spacing: 12) {
+                    ProgressView()
+                        .progressViewStyle(CircularProgressViewStyle(tint: .teal))
+                        .scaleEffect(1.2)
+                    
+                    Text("Caricamento previsioni...")
+                        .font(.system(size: 11, weight: .bold))
+                        .foregroundColor(.white.opacity(0.4))
+                        .tracking(1)
+                }
+                .padding(.bottom, 50)
+            }
         }
     }
 }

@@ -466,6 +466,33 @@ public class RulesEngine {
         }
     }
     
+    private static func cleanupReasons(_ reasons: [String]) -> [String] {
+        var unique = Array(Set(reasons))
+        
+        // Remove redundancy: if both are present, keep only the stronger "corrente marea favorevole"
+        if unique.contains("corrente marea favorevole") && unique.contains("flusso marea attivo") {
+            unique.removeAll(where: { $0 == "flusso marea attivo" })
+        }
+        
+        // Rank priorities
+        let rank: (String) -> Int = { r in
+            switch r {
+            case "temperatura acqua penalizzante": return 0
+            case "corrente marea favorevole": return 1
+            case "periodo solunare attivo": return 2
+            case "fase lunare ottimale": return 3
+            case "meteo costiero favorevole": return 4
+            case "flusso marea attivo": return 5
+            case "temperatura acqua favorevole": return 6
+            case "fase lunare debole": return 7
+            default: return 10
+            }
+        }
+        
+        let sorted = unique.sorted { rank($0) < rank($1) }
+        return Array(sorted.prefix(3))
+    }
+    
     private static func topReasons(from breakdown: ScoreBreakdown) -> [String] {
         var reasons: [String] = []
         if breakdown.tide > 1.25 {
@@ -492,7 +519,7 @@ public class RulesEngine {
         if reasons.isEmpty {
             reasons.append("condizioni stabili")
         }
-        return Array(reasons.prefix(3))
+        return cleanupReasons(reasons)
     }
     
     private static func mergeOverlappingOrCloseWindows(_ windows: [ActivityWindow]) -> [ActivityWindow] {
@@ -509,10 +536,8 @@ public class RulesEngine {
                 let peakScore = max(current.peakScore, next.peakScore)
                 let label = (current.peakScore >= next.peakScore) ? current.label : next.label
                 let efficacy = (current.peakScore >= next.peakScore) ? current.efficacyPercent : next.efficacyPercent
-                var reasonsSet = Set(current.reasons)
-                for r in next.reasons {
-                    reasonsSet.insert(r)
-                }
+                var combinedReasons = current.reasons
+                combinedReasons.append(contentsOf: next.reasons)
                 current = ActivityWindow(
                     start: current.start,
                     end: max(current.end, next.end),
@@ -520,7 +545,7 @@ public class RulesEngine {
                     peakScore: peakScore,
                     label: label,
                     efficacyPercent: efficacy,
-                    reasons: Array(reasonsSet)
+                    reasons: cleanupReasons(combinedReasons)
                 )
             } else {
                 merged.append(current)
