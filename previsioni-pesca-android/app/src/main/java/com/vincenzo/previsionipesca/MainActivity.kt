@@ -419,8 +419,14 @@ fun MainScreen() {
 
             Spacer(modifier = Modifier.height(16.dp))
 
+            // Astronomia e Fase Lunare Details
+            AstroDetailsCard(forecast = currentForecast)
+
+            Spacer(modifier = Modifier.height(16.dp))
+
             // Marine and Coastal Parameters
             CoastalParametersCard(
+                waterTempCelsius = waterTempCelsius,
                 cloudCover = cloudCover,
                 windDirectionChange = windDirectionChange,
                 swellHeight = swellHeight,
@@ -749,30 +755,82 @@ fun CalendarCell(
 
 @Composable
 fun CalendarLegend() {
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.SpaceAround
-    ) {
-        listOf(
-            Pair("Bassa", ActivityBassa),
-            Pair("Mod.", ActivityModerata),
-            Pair("Buona", ActivityBuona),
-            Pair("Alta", ActivityAlta),
-            Pair("Ecc.", ActivityEccezionale)
-        ).forEach { pair ->
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Box(
-                    modifier = Modifier
-                        .size(8.dp)
-                        .clip(CircleShape)
-                        .background(pair.second.copy(alpha = 0.85f))
-                )
-                Spacer(modifier = Modifier.width(4.dp))
+    VStack(spacing = 8) {
+        Divider(color = Color.White.copy(alpha = 0.1f))
+
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.Top
+        ) {
+            // Left Column: Previsioni Reali / Stima Climatologica / Oggi
+            VStack(spacing = 4) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Box(
+                        modifier = Modifier
+                            .size(10.dp)
+                            .clip(RoundedCornerShape(2.dp))
+                            .background(TealAccent.copy(alpha = 0.85f))
+                    )
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Text("Previsioni Reali", color = Color.White.copy(alpha = 0.7f), fontSize = 9.sp)
+                }
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Box(
+                        modifier = Modifier
+                            .size(10.dp)
+                            .clip(RoundedCornerShape(2.dp))
+                            .background(Color.Gray.copy(alpha = 0.38f))
+                            .border(1.dp, Color.White.copy(alpha = 0.3f), RoundedCornerShape(2.dp))
+                    )
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Text("Stima Climatologica", color = Color.White.copy(alpha = 0.7f), fontSize = 9.sp)
+                }
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Box(
+                        modifier = Modifier
+                            .size(8.dp)
+                            .clip(CircleShape)
+                            .background(TealAccent)
+                    )
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Text("Oggi (Giorno corrente)", color = Color.White.copy(alpha = 0.7f), fontSize = 9.sp)
+                }
+            }
+
+            // Right Column: Efficacia Pesca
+            Column {
                 Text(
-                    text = pair.first,
-                    color = Color.White.copy(alpha = 0.6f),
-                    fontSize = 10.sp
+                    text = "Efficacia Pesca:",
+                    color = Color.White.copy(alpha = 0.5f),
+                    fontSize = 9.sp,
+                    fontWeight = FontWeight.Bold
                 )
+                Spacer(modifier = Modifier.height(4.dp))
+                Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                    listOf(
+                        Pair("Bassa", ActivityBassa),
+                        Pair("Mod.", ActivityModerata),
+                        Pair("Buona", ActivityBuona),
+                        Pair("Alta", ActivityAlta),
+                        Pair("Ecc.", ActivityEccezionale)
+                    ).forEach { pair ->
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Box(
+                                modifier = Modifier
+                                    .size(6.dp)
+                                    .clip(CircleShape)
+                                    .background(pair.second.copy(alpha = 0.85f))
+                            )
+                            Spacer(modifier = Modifier.width(3.dp))
+                            Text(
+                                text = pair.first,
+                                color = Color.White.copy(alpha = 0.7f),
+                                fontSize = 8.sp
+                            )
+                        }
+                    }
+                }
             }
         }
     }
@@ -780,13 +838,21 @@ fun CalendarLegend() {
 
 @Composable
 fun DailyActivitySummaryCard(forecast: DailyForecast) {
+    val displayColor = when (forecast.dailyActivity) {
+        ActivityLevel.BASSA -> ActivityBassa
+        ActivityLevel.MODERATA -> ActivityModerata
+        ActivityLevel.BUONA -> ActivityBuona
+        ActivityLevel.ALTA -> ActivityAlta
+        ActivityLevel.MOLTO_ALTA -> ActivityEccezionale
+    }
+
     Card(
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp),
         colors = CardDefaults.cardColors(containerColor = DarkNavy),
         shape = RoundedCornerShape(16.dp),
-        border = BorderStroke(1.dp, Color.White.copy(alpha = 0.08f))
+        border = BorderStroke(1.dp, displayColor.copy(alpha = 0.3f))
     ) {
         Column(
             modifier = Modifier
@@ -795,55 +861,116 @@ fun DailyActivitySummaryCard(forecast: DailyForecast) {
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Text(
-                text = "Attività del Giorno",
+                text = "ATTIVITÀ DEL GIORNO",
                 color = Color.White.copy(alpha = 0.6f),
-                fontSize = 12.sp,
+                fontSize = 11.sp,
                 fontWeight = FontWeight.Bold,
-                modifier = Modifier.fillMaxWidth()
+                letterSpacing = 1.5.sp
             )
 
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(8.dp))
 
-            val displayLabel = forecast.dailyActivity.description
-            val displayColor = when (forecast.dailyActivity) {
-                ActivityLevel.BASSA -> ActivityBassa
-                ActivityLevel.MODERATA -> ActivityModerata
-                ActivityLevel.BUONA -> ActivityBuona
-                ActivityLevel.ALTA -> ActivityAlta
-                ActivityLevel.MOLTO_ALTA -> ActivityEccezionale
-            }
+            Text(
+                text = forecast.dailyActivity.description,
+                color = displayColor,
+                fontSize = 22.sp,
+                fontWeight = FontWeight.Black,
+                textAlign = TextAlign.Center
+            )
 
-            Box(
-                modifier = Modifier
-                    .clip(RoundedCornerShape(12.dp))
-                    .background(displayColor.copy(alpha = 0.15f))
-                    .border(1.dp, displayColor.copy(alpha = 0.4f), RoundedCornerShape(12.dp))
-                    .padding(horizontal = 24.dp, vertical = 12.dp)
+            Spacer(modifier = Modifier.height(8.dp))
+
+            // Fish indicator row
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                Text(
-                    text = displayLabel,
-                    color = displayColor,
-                    fontSize = 20.sp,
-                    fontWeight = FontWeight.Black,
-                    textAlign = TextAlign.Center
-                )
+                for (idx in 0 until 4) {
+                    val isHighlighted = idx < forecast.dailyActivity.score
+                    Text(
+                        text = "🐟",
+                        fontSize = 24.sp,
+                        modifier = Modifier.alpha(if (isHighlighted) 1.0f else 0.2f)
+                    )
+                }
             }
 
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(8.dp))
 
-            // Ephemerides Grid
-            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceAround) {
-                AstroItem(label = "☀️ Alba", value = formatTime(forecast.sunrise))
-                AstroItem(label = "☀️ Tramonto", value = formatTime(forecast.sunset))
-                AstroItem(label = "🌙 Alba Luna", value = formatTime(forecast.moonrise))
-                AstroItem(label = "🌙 Tram. Luna", value = formatTime(forecast.moonset))
-            }
+            val efficacyPercent = ((forecast.rawScore / 1.8) * 100.0).roundToInt().coerceIn(0, 100)
+            Text(
+                text = "Indice di Efficacia: $efficacyPercent%",
+                color = displayColor,
+                fontSize = 16.sp,
+                fontWeight = FontWeight.Bold
+            )
+
+            Spacer(modifier = Modifier.height(4.dp))
+
+            Text(
+                text = String.format(Locale.ITALY, "Escursione max marea: %.2f m", forecast.maxTideAmplitude),
+                color = Color.White.copy(alpha = 0.7f),
+                fontSize = 12.sp
+            )
+        }
+    }
+}
+
+@Composable
+fun AstroRowItem(label: String, value: String, modifier: Modifier = Modifier) {
+    Row(
+        modifier = modifier.padding(vertical = 2.dp),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(
+            text = label,
+            color = Color.White.copy(alpha = 0.8f),
+            fontSize = 13.sp
+        )
+        Text(
+            text = value,
+            color = Color.White,
+            fontSize = 13.sp,
+            fontWeight = FontWeight.Bold
+        )
+    }
+}
+
+@Composable
+fun AstroDetailsCard(forecast: DailyForecast) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp),
+        colors = CardDefaults.cardColors(containerColor = DarkNavy),
+        shape = RoundedCornerShape(16.dp),
+        border = BorderStroke(1.dp, Color.White.copy(alpha = 0.08f))
+    ) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            Text(
+                text = "Astronomia e Fase Lunare",
+                color = Color.White.copy(alpha = 0.6f),
+                fontSize = 12.sp,
+                fontWeight = FontWeight.Bold
+            )
 
             Spacer(modifier = Modifier.height(12.dp))
 
-            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceAround) {
-                AstroItem(label = "🌓 Fase Lunare", value = forecast.moonPhase)
-                AstroItem(label = "🎚️ Coeff. Marea", value = "${forecast.tideCoefficient.toInt()}") // Display formatted actual coeff
+            VStack(spacing = 8) {
+                AstroRowItem(label = "☀️ Alba Sole", value = formatTime(forecast.sunrise), modifier = Modifier.fillMaxWidth())
+                Divider(color = Color.White.copy(alpha = 0.05f))
+                AstroRowItem(label = "☀️ Tramonto Sole", value = formatTime(forecast.sunset), modifier = Modifier.fillMaxWidth())
+                Divider(color = Color.White.copy(alpha = 0.05f))
+                AstroRowItem(label = "🌙 Alba Luna", value = formatTime(forecast.moonrise), modifier = Modifier.fillMaxWidth())
+                Divider(color = Color.White.copy(alpha = 0.05f))
+                AstroRowItem(label = "🌙 Tramonto Luna", value = formatTime(forecast.moonset), modifier = Modifier.fillMaxWidth())
+                Divider(color = Color.White.copy(alpha = 0.05f))
+                AstroRowItem(label = "🎯 Transito Luna", value = formatTime(forecast.moonTransit), modifier = Modifier.fillMaxWidth())
+                Divider(color = Color.White.copy(alpha = 0.05f))
+                AstroRowItem(label = "🌓 Fase Lunare", value = forecast.moonPhase, modifier = Modifier.fillMaxWidth())
+                Divider(color = Color.White.copy(alpha = 0.05f))
+                AstroRowItem(label = "🎚️ Coeff. Marea", value = "${forecast.tideCoefficient.toInt()}", modifier = Modifier.fillMaxWidth())
             }
         }
     }
@@ -1023,19 +1150,19 @@ fun TideChartCard(forecast: DailyForecast, selectedDate: Date) {
                         Text(
                             text = "$typeChar ${event.type.displayName}",
                             color = typeColor,
-                            fontSize = 10.sp,
+                            fontSize = 12.sp,
                             fontWeight = FontWeight.Bold
                         )
                         Text(
                             text = SimpleDateFormat("HH:mm", Locale.ITALIAN).format(event.time),
                             color = Color.White,
-                            fontSize = 12.sp,
+                            fontSize = 14.sp,
                             fontWeight = FontWeight.Bold
                         )
                         Text(
                             text = String.format(Locale.ITALY, "%+.2f m", event.height),
                             color = Color.White.copy(alpha = 0.6f),
-                            fontSize = 10.sp
+                            fontSize = 12.sp
                         )
                     }
                 }
@@ -1065,7 +1192,7 @@ fun TideCanvas(forecast: DailyForecast, selectedDate: Date) {
             color = Color.White.copy(alpha = 0.08f),
             start = Offset(0f, centerY),
             end = Offset(width, centerY),
-            strokeWidth = 1f
+            strokeWidth = 2f
         )
 
         // Draw vertical dotted grid lines for hours (0, 6, 12, 18, 24)
@@ -1075,7 +1202,7 @@ fun TideCanvas(forecast: DailyForecast, selectedDate: Date) {
                 color = Color.White.copy(alpha = 0.1f),
                 start = Offset(gridX, 0f),
                 end = Offset(gridX, height),
-                strokeWidth = 1f,
+                strokeWidth = 2f,
                 pathEffect = PathEffect.dashPathEffect(floatArrayOf(4f, 4f), 0f)
             )
         }
@@ -1097,7 +1224,7 @@ fun TideCanvas(forecast: DailyForecast, selectedDate: Date) {
 
         // Plot sinusoidal Tide curve
         val path = Path()
-        val amplitudeFactor = height * 0.35f
+        val amplitudeFactor = height * 0.3f
         var maxObservedAmp = 0.15 // fallback
         if (forecast.tides.isNotEmpty()) {
             maxObservedAmp = forecast.tides.map { abs(it.height) }.maxOrNull() ?: 0.15
@@ -1123,20 +1250,27 @@ fun TideCanvas(forecast: DailyForecast, selectedDate: Date) {
         drawPath(
             path = path,
             color = TealAccent,
-            style = Stroke(width = 2.5f, cap = StrokeCap.Round)
+            style = Stroke(width = 4f, cap = StrokeCap.Round)
         )
 
         // Draw Star and TOP labels for tides
         val paintText = Paint().asFrameworkPaint().apply {
             color = android.graphics.Color.WHITE
-            textSize = 20f
+            textSize = 26f
             typeface = android.graphics.Typeface.DEFAULT_BOLD
             textAlign = android.graphics.Paint.Align.CENTER
         }
 
-        val paintTextGold = Paint().asFrameworkPaint().apply {
+        val paintStarGold = Paint().asFrameworkPaint().apply {
             color = android.graphics.Color.parseColor("#FFF176")
-            textSize = 18f
+            textSize = 36f
+            typeface = android.graphics.Typeface.DEFAULT_BOLD
+            textAlign = android.graphics.Paint.Align.CENTER
+        }
+
+        val paintTopGold = Paint().asFrameworkPaint().apply {
+            color = android.graphics.Color.parseColor("#FFF176")
+            textSize = 22f
             typeface = android.graphics.Typeface.DEFAULT_BOLD
             textAlign = android.graphics.Paint.Align.CENTER
         }
@@ -1149,7 +1283,7 @@ fun TideCanvas(forecast: DailyForecast, selectedDate: Date) {
             // Draw event node point
             drawCircle(
                 color = if (event.type == TideType.ALTA) TealAccent else GrayMuted,
-                radius = 3.5f,
+                radius = 5.5f,
                 center = Offset(ex, ey)
             )
 
@@ -1158,7 +1292,7 @@ fun TideCanvas(forecast: DailyForecast, selectedDate: Date) {
             drawContext.canvas.nativeCanvas.drawText(
                 timeText,
                 ex,
-                ey + if (event.type == TideType.ALTA) -8f else 18f,
+                ey + if (event.type == TideType.ALTA) -12f else 30f,
                 paintText
             )
         }
@@ -1171,14 +1305,15 @@ fun TideCanvas(forecast: DailyForecast, selectedDate: Date) {
             val hVal = TideEngine.calculateHeight(best.peak, forecast.location.coordinate)
             val ey = centerY - (hVal / maxAmpVal).toFloat() * amplitudeFactor
 
-            drawContext.canvas.nativeCanvas.drawText("★", ex, ey - 10f, paintTextGold)
-            drawContext.canvas.nativeCanvas.drawText("TOP", ex, ey - 20f, paintTextGold)
+            drawContext.canvas.nativeCanvas.drawText("★", ex, ey - 14f, paintStarGold)
+            drawContext.canvas.nativeCanvas.drawText("TOP", ex, ey - 38f, paintTopGold)
         }
     }
 }
 
 @Composable
 fun CoastalParametersCard(
+    waterTempCelsius: Double,
     cloudCover: Double,
     windDirectionChange: Double,
     swellHeight: Double,
@@ -1229,6 +1364,14 @@ fun CoastalParametersCard(
             Spacer(modifier = Modifier.height(16.dp))
 
             VStack(spacing = 12) {
+                ParameterItem(
+                    icon = "🌡️",
+                    label = "Temp. Acqua",
+                    value = "${waterTempCelsius.toInt()}°C",
+                    color = TealAccent,
+                    subtitle = if (waterTempCelsius < 15.0) "Metabolismo ridotto (freddo)" else if (waterTempCelsius > 25.0) "Letargici (caldo)" else "Condizione ottimale (Q10)"
+                )
+                Divider(color = Color.White.copy(alpha = 0.05f))
                 ParameterItem(
                     icon = "☁️",
                     label = "Nuvolosità",
@@ -1292,7 +1435,8 @@ fun ParameterItem(
     icon: String,
     label: String,
     value: String,
-    color: Color
+    color: Color,
+    subtitle: String? = null
 ) {
     Row(
         modifier = Modifier.fillMaxWidth(),
@@ -1302,11 +1446,20 @@ fun ParameterItem(
         Row(verticalAlignment = Alignment.CenterVertically) {
             Text(text = icon, fontSize = 14.sp)
             Spacer(modifier = Modifier.width(8.dp))
-            Text(
-                text = label,
-                color = Color.White.copy(alpha = 0.8f),
-                fontSize = 13.sp
-            )
+            Column {
+                Text(
+                    text = label,
+                    color = Color.White.copy(alpha = 0.8f),
+                    fontSize = 13.sp
+                )
+                subtitle?.let {
+                    Text(
+                        text = it,
+                        color = Color.White.copy(alpha = 0.5f),
+                        fontSize = 9.sp
+                    )
+                }
+            }
         }
         Text(
             text = value,
