@@ -7,6 +7,7 @@ import org.shredzone.commons.suncalc.MoonTimes
 import org.shredzone.commons.suncalc.SunTimes
 import java.time.ZoneId
 import java.time.ZonedDateTime
+import java.util.Calendar
 import java.util.Date
 
 data class AstronomyData(
