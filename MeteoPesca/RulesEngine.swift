@@ -217,6 +217,24 @@ public class RulesEngine {
         let moonIllumination = AstronomyEngine.calculateAstronomy(date: date, coordinate: location.coordinate).moonIllumination
         let moonPhase = AstronomyEngine.calculateAstronomy(date: date, coordinate: location.coordinate).moonPhase
         
+        let bestWindowsList = calculateBestWindows(
+            date: date,
+            location: location,
+            sunrise: sunrise,
+            sunset: sunset,
+            moonrise: moonrise,
+            moonset: moonset,
+            moonTransit: moonTransit,
+            moonAntiTransit: moonAntiTransit,
+            moonAge: moonAge,
+            tides: tides,
+            weatherMult: weatherMult,
+            fWaterTemp: fWaterTemp,
+            fPhase: fPhase,
+            maxAmplitude: maxAmplitude,
+            periods: periods
+        )
+        
         return DailyForecast(
             date: date,
             location: location,
@@ -234,6 +252,7 @@ public class RulesEngine {
             solunarPeriods: periods,
             dailyActivity: dailyLevel,
             hourlyIntervals: intervals,
+            bestWindows: bestWindowsList,
             rawScore: score,
             moonPhaseFactor: fPhase,
             moonDistanceFactor: fDist,
@@ -289,4 +308,240 @@ public class RulesEngine {
         
         return (velocityFactor + transitionBonus) * slackMultiplier
     }
+    
+    private static func calculateBestWindows(
+        date: Date,
+        location: Location,
+        sunrise: Date?,
+        sunset: Date?,
+        moonrise: Date?,
+        moonset: Date?,
+        moonTransit: Date?,
+        moonAntiTransit: Date?,
+        moonAge: Double,
+        tides: [TideEvent],
+        weatherMult: Double,
+        fWaterTemp: Double,
+        fPhase: Double,
+        maxAmplitude: Double,
+        periods: [SolunarPeriod]
+    ) -> [ActivityWindow] {
+        var calendar = Calendar.current
+        calendar.timeZone = TimeZone.current
+        let startOfDay = calendar.startOfDay(for: date)
+        
+        // 1. Generate 15-minute slot scores (96 slots in 24 hours)
+        var slots: [SlotScore] = []
+        for i in 0..<96 {
+            let offset = Double(i) * 15.0 * 60.0
+            guard let slotStart = calendar.date(byAdding: .second, value: Int(offset), to: startOfDay) else { continue }
+            let slotEnd = slotStart.addingTimeInterval(15.0 * 60.0)
+            
+            var solunarBonus = 0.0
+            for period in periods {
+                let overlapStart = max(slotStart, period.startTime)
+                let overlapEnd = min(slotEnd, period.endTime)
+                if overlapStart < overlapEnd {
+                    let overlapDuration = overlapEnd.timeIntervalSince(overlapStart) / 3600.0
+                    let baseBonus: Double = (period.type == .maggior) ? 1.5 : 1.0
+                    solunarBonus += baseBonus * overlapDuration
+                    if period.isEnhanced {
+                        solunarBonus += 0.5 * (overlapDuration / 1.0)
+                    }
+                }
+            }
+            let solunarFactor = 1.0 + (solunarBonus / 0.25) * 0.5
+            
+            let midSlotDate = slotStart.addingTimeInterval(450.0)
+            let tideFactor = calculateTidalActivityFactor(date: midSlotDate, tides: tides, coordinate: location.coordinate, maxAmplitude: maxAmplitude)
+            
+            let baseScore = 0.5
+            var slotScore = baseScore * solunarFactor * tideFactor * weatherMult * fWaterTemp * fPhase
+            slotScore = min(slotScore, 3.2)
+            
+            let breakdown = ScoreBreakdown(
+                tide: tideFactor,
+                solunar: solunarFactor,
+                weather: weatherMult,
+                waterTemp: fWaterTemp,
+                lunarPhase: fPhase
+            )
+            
+            slots.append(SlotScore(date: midSlotDate, score: slotScore, breakdown: breakdown))
+        }
+        
+        // 2. Smooth the scores using a 3-slot moving average
+        let rawScores = slots.map { $0.score }
+        var smoothedScores = rawScores
+        if rawScores.count > 2 {
+            for i in 1..<(rawScores.count - 1) {
+                smoothedScores[i] = (rawScores[i - 1] + rawScores[i] + rawScores[i + 1]) / 3.0
+            }
+        }
+        
+        var smoothedSlots: [SlotScore] = []
+        for i in 0..<slots.count {
+            smoothedSlots.append(SlotScore(
+                date: slots[i].date,
+                score: smoothedScores[i],
+                breakdown: slots[i].breakdown
+            ))
+        }
+        
+        // 3. Find local peaks (interior slots greater than neighbours)
+        var peakIndices: [Int] = []
+        if smoothedSlots.count > 2 {
+            for i in 1..<(smoothedSlots.count - 1) {
+                let prev = smoothedSlots[i - 1].score
+                let curr = smoothedSlots[i].score
+                let next = smoothedSlots[i + 1].score
+                if curr > prev && curr > next {
+                    peakIndices.append(i)
+                }
+            }
+        }
+        
+        // 4. Rank peaks
+        let rankedIndices = peakIndices.sorted { smoothedSlots[$0].score > smoothedSlots[$1].score }
+        
+        var windows: [ActivityWindow] = []
+        
+        // 5. Expand peaks to windows
+        for idx in rankedIndices {
+            let peakScore = smoothedSlots[idx].score
+            let threshold = peakScore * 0.85
+            
+            var start = idx
+            var end = idx
+            while start > 0 && smoothedSlots[start - 1].score >= threshold {
+                start -= 1
+            }
+            while end < smoothedSlots.count - 1 && smoothedSlots[end + 1].score >= threshold {
+                end += 1
+            }
+            
+            let startDate = smoothedSlots[start].date.addingTimeInterval(-450.0) // align to slot boundary
+            let endDate = smoothedSlots[end].date.addingTimeInterval(450.0)
+            
+            guard endDate.timeIntervalSince(startDate) >= 45.0 * 60.0 else { continue }
+            
+            let label = classifyScore(peakScore)
+            let efficacy = min(100, Int(round((peakScore / 3.2) * 100.0)))
+            let reasons = topReasons(from: smoothedSlots[idx].breakdown)
+            
+            let candidate = ActivityWindow(
+                start: startDate,
+                end: endDate,
+                peak: smoothedSlots[idx].date,
+                peakScore: peakScore,
+                label: label,
+                efficacyPercent: efficacy,
+                reasons: reasons
+            )
+            
+            if windows.allSatisfy({ abs($0.peak.timeIntervalSince(candidate.peak)) > 5400.0 }) {
+                windows.append(candidate)
+            }
+        }
+        
+        // 6. Merge close windows
+        let mergedWindows = mergeOverlappingOrCloseWindows(windows)
+        
+        // 7. Limit to top 3 and sort chronologically
+        let finalWindows = Array(mergedWindows.sorted { $0.efficacyPercent > $1.efficacyPercent }.prefix(3))
+        return finalWindows.sorted { $0.start < $1.start }
+    }
+    
+    private static func classifyScore(_ score: Double) -> ActivityLevel {
+        if score < 0.6 {
+            return .bassa
+        } else if score < 1.2 {
+            return .moderata
+        } else if score < 1.8 {
+            return .buona
+        } else if score < 2.5 {
+            return .alta
+        } else {
+            return .moltoAlta
+        }
+    }
+    
+    private static func topReasons(from breakdown: ScoreBreakdown) -> [String] {
+        var reasons: [String] = []
+        if breakdown.tide > 1.25 {
+            reasons.append("corrente marea favorevole")
+        } else if breakdown.tide > 1.05 {
+            reasons.append("flusso marea attivo")
+        }
+        if breakdown.solunar > 1.20 {
+            reasons.append("periodo solunare attivo")
+        }
+        if breakdown.weather > 1.10 {
+            reasons.append("meteo costiero favorevole")
+        }
+        if breakdown.waterTemp < 0.90 {
+            reasons.append("temperatura acqua penalizzante")
+        } else if breakdown.waterTemp > 1.05 {
+            reasons.append("temperatura acqua favorevole")
+        }
+        if breakdown.lunarPhase > 0.80 {
+            reasons.append("fase lunare ottimale")
+        } else if breakdown.lunarPhase < 0.30 {
+            reasons.append("fase lunare debole")
+        }
+        if reasons.isEmpty {
+            reasons.append("condizioni stabili")
+        }
+        return Array(reasons.prefix(3))
+    }
+    
+    private static func mergeOverlappingOrCloseWindows(_ windows: [ActivityWindow]) -> [ActivityWindow] {
+        guard windows.count > 1 else { return windows }
+        let sorted = windows.sorted { $0.start < $1.start }
+        var merged: [ActivityWindow] = []
+        var current = sorted[0]
+        
+        for i in 1..<sorted.count {
+            let next = sorted[i]
+            let gap = next.start.timeIntervalSince(current.end)
+            if gap < 30 * 60 {
+                let peakDate = (current.peakScore >= next.peakScore) ? current.peak : next.peak
+                let peakScore = max(current.peakScore, next.peakScore)
+                let label = (current.peakScore >= next.peakScore) ? current.label : next.label
+                let efficacy = (current.peakScore >= next.peakScore) ? current.efficacyPercent : next.efficacyPercent
+                var reasonsSet = Set(current.reasons)
+                for r in next.reasons {
+                    reasonsSet.insert(r)
+                }
+                current = ActivityWindow(
+                    start: current.start,
+                    end: max(current.end, next.end),
+                    peak: peakDate,
+                    peakScore: peakScore,
+                    label: label,
+                    efficacyPercent: efficacy,
+                    reasons: Array(reasonsSet)
+                )
+            } else {
+                merged.append(current)
+                current = next
+            }
+        }
+        merged.append(current)
+        return merged
+    }
+}
+
+public struct ScoreBreakdown: Codable, Hashable {
+    public let tide: Double
+    public let solunar: Double
+    public let weather: Double
+    public let waterTemp: Double
+    public let lunarPhase: Double
+}
+
+public struct SlotScore {
+    public let date: Date
+    public let score: Double
+    public let breakdown: ScoreBreakdown
 }

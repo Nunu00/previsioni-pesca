@@ -306,6 +306,100 @@ struct ContentView: View {
                             )
                             .padding(.horizontal)
                             
+                            // 2a. Finestre Migliori di Oggi
+                            VStack(alignment: .leading, spacing: 12) {
+                                HStack {
+                                    Image(systemName: "clock.badge.checkmark")
+                                        .foregroundColor(.teal)
+                                    Text("Finestre Migliori di Oggi")
+                                        .font(.headline)
+                                        .foregroundColor(.white)
+                                }
+                                
+                                if forecast.bestWindows.isEmpty {
+                                    HStack {
+                                        Spacer()
+                                        VStack(spacing: 6) {
+                                            Image(systemName: "calendar.badge.exclamationmark")
+                                                .font(.title2)
+                                                .foregroundColor(.white.opacity(0.4))
+                                            Text(forecast.dailyActivity == .bassa ? "Nessun picco netto oggi" : "Attività distribuita uniformemente")
+                                                .font(.subheadline)
+                                                .fontWeight(.bold)
+                                                .foregroundColor(.white.opacity(0.6))
+                                            Text(forecast.dailyActivity == .bassa ? "L'attività dei pesci si mantiene bassa per tutta la giornata." : "Condizioni stabili durante l'arco della giornata.")
+                                                .font(.system(size: 10))
+                                                .foregroundColor(.white.opacity(0.4))
+                                                .multilineTextAlignment(.center)
+                                        }
+                                        .padding(.vertical, 8)
+                                        Spacer()
+                                    }
+                                    .padding()
+                                    .background(Color.white.opacity(0.04))
+                                    .cornerRadius(12)
+                                } else {
+                                    ForEach(forecast.bestWindows) { window in
+                                        HStack(spacing: 12) {
+                                            VStack(alignment: .leading, spacing: 4) {
+                                                Text("\(hourFormatter.string(from: window.start)) – \(hourFormatter.string(from: window.end))")
+                                                    .font(.system(size: 15, weight: .bold))
+                                                    .foregroundColor(.white)
+                                                
+                                                HStack(spacing: 4) {
+                                                    Text(window.label.rawValue)
+                                                        .font(.system(size: 9, weight: .bold))
+                                                        .padding(.horizontal, 6)
+                                                        .padding(.vertical, 2)
+                                                        .background(colorForActivity(window.label).opacity(0.25))
+                                                        .foregroundColor(colorForActivity(window.label))
+                                                        .cornerRadius(4)
+                                                    
+                                                    Text("\(window.efficacyPercent)%")
+                                                        .font(.system(size: 9, weight: .bold))
+                                                        .padding(.horizontal, 6)
+                                                        .padding(.vertical, 2)
+                                                        .background(Color.white.opacity(0.1))
+                                                        .foregroundColor(.white.opacity(0.9))
+                                                        .cornerRadius(4)
+                                                }
+                                            }
+                                            
+                                            Spacer()
+                                            
+                                            VStack(alignment: .trailing, spacing: 2) {
+                                                ForEach(window.reasons, id: \.self) { reason in
+                                                    Text("• \(reason)")
+                                                        .font(.system(size: 10))
+                                                        .foregroundColor(.white.opacity(0.7))
+                                                }
+                                            }
+                                        }
+                                        .padding()
+                                        .background(
+                                            LinearGradient(
+                                                gradient: Gradient(colors: [Color.white.opacity(0.05), Color.white.opacity(0.02)]),
+                                                startPoint: .topLeading,
+                                                endPoint: .bottomTrailing
+                                            )
+                                        )
+                                        .cornerRadius(12)
+                                        .overlay(
+                                            RoundedRectangle(cornerRadius: 12)
+                                                .stroke(colorForActivity(window.label).opacity(0.2), lineWidth: 1)
+                                        )
+                                    }
+                                }
+                            }
+                            .padding()
+                            .background(Color.white.opacity(0.04))
+                            .cornerRadius(16)
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 16)
+                                    .stroke(Color.white.opacity(0.08), lineWidth: 1)
+                            )
+                            .padding(.horizontal)
+                            
                             // 3. Tide curve SVG/Canvas
                             TideChartView(forecast: forecast)
                                 .frame(height: 160)
@@ -1036,6 +1130,27 @@ struct TideChartView: View {
             Canvas { context, size in
                 let width = size.width
                 let height = size.height
+                let calendar = Calendar.current
+                let startOfDay = calendar.startOfDay(for: forecast.date)
+                
+                // Draw soft vertical bands for best windows
+                for window in forecast.bestWindows {
+                    let startOffset = window.start.timeIntervalSince(startOfDay)
+                    let endOffset = window.end.timeIntervalSince(startOfDay)
+                    
+                    let startHours = startOffset / 3600.0
+                    let endHours = endOffset / 3600.0
+                    
+                    // Clamp hours to 0-24 range
+                    let clampedStart = max(0.0, min(24.0, startHours))
+                    let clampedEnd = max(0.0, min(24.0, endHours))
+                    
+                    let drawStartX = (clampedStart / 24.0) * Double(width)
+                    let drawEndX = (clampedEnd / 24.0) * Double(width)
+                    
+                    let rect = CGRect(x: drawStartX, y: 0, width: drawEndX - drawStartX, height: Double(height))
+                    context.fill(Path(rect), with: .color(Color.teal.opacity(0.12)))
+                }
                 
                 // Draw zero level line
                 var zeroPath = Path()
@@ -1077,8 +1192,27 @@ struct TideChartView: View {
                 
                 context.stroke(tidePath, with: .linearGradient(Gradient(colors: [.teal, .blue]), startPoint: CGPoint(x: 0, y: 0), endPoint: CGPoint(x: width, y: 0)), lineWidth: 3)
                 
+                // Draw star and TOP badge at the peak of the absolute best window
+                if let best = forecast.bestWindows.max(by: { $0.efficacyPercent < $1.efficacyPercent }) {
+                    let peakOffset = best.peak.timeIntervalSince(startOfDay)
+                    let peakHours = peakOffset / 3600.0
+                    let drawX = (peakHours / 24.0) * Double(width)
+                    
+                    let h = TideEngine.calculateHeight(at: best.peak, coordinate: coord)
+                    let drawY = height / 2 - CGFloat(h) * CGFloat(scaleY)
+                    
+                    // Draw Star
+                    let starImage = Image(systemName: "star.fill")
+                    context.draw(starImage, at: CGPoint(x: drawX, y: drawY - 14))
+                    
+                    // Draw TOP text badge
+                    let topText = Text("TOP")
+                        .font(.system(size: 8, weight: .black))
+                        .foregroundColor(.yellow)
+                    context.draw(topText, at: CGPoint(x: drawX, y: drawY - 26))
+                }
+                
                 // Mark tide events (highs / lows)
-                let calendar = Calendar.current
                 let formatter = DateFormatter()
                 formatter.dateFormat = "HH:mm"
                 

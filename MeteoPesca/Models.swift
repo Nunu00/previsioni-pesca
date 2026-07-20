@@ -117,6 +117,7 @@ public struct DailyForecast: Identifiable, Codable {
     // Ratings
     public var dailyActivity: ActivityLevel
     public var hourlyIntervals: [HourlyInterval]
+    public var bestWindows: [ActivityWindow]
     
     // Detailed factor breakdown
     public var rawScore: Double
@@ -126,6 +127,27 @@ public struct DailyForecast: Identifiable, Codable {
     public var solunarOverlapFactor: Double
     public var weatherFactorVal: Double
     public var waterTempFactor: Double
+}
+
+public struct ActivityWindow: Identifiable, Codable, Hashable {
+    public var id: UUID = UUID()
+    public let start: Date
+    public let end: Date
+    public let peak: Date
+    public let peakScore: Double
+    public let label: ActivityLevel
+    public let efficacyPercent: Int
+    public let reasons: [String]
+    
+    public init(start: Date, end: Date, peak: Date, peakScore: Double, label: ActivityLevel, efficacyPercent: Int, reasons: [String]) {
+        self.start = start
+        self.end = end
+        self.peak = peak
+        self.peakScore = peakScore
+        self.label = label
+        self.efficacyPercent = efficacyPercent
+        self.reasons = reasons
+    }
 }
 
 public struct WeatherFactor: Codable, Hashable {
