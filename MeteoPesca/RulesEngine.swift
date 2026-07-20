@@ -13,7 +13,7 @@ public class RulesEngine {
         moonAntiTransit: Date?,
         moonAge: Double,
         tides: [TideEvent],
-        weather: WeatherFactor = WeatherFactor(cloudCoverPercent: 20.0, windDirectionChange: 10.0, swellHeight: 0.2, surfaceTempDelta24h: 0.0),
+        weather: WeatherFactor = WeatherFactor(cloudCoverPercent: 20.0, windDirectionChange: 10.0, swellHeight: 0.2, surfaceTempDelta24h: 0.0, windSpeedMps: 4.0),
         waterTempCelsius: Double = 20.0
     ) -> DailyForecast {
         

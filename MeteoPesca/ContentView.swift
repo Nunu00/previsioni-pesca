@@ -19,6 +19,7 @@ struct ContentView: View {
     @State private var weatherErrorMessage: String? = nil
     @State private var weatherCache: [String: FetchedWeatherData] = [:]
     @State private var isSplashActive: Bool = true
+    @State private var windSpeedMps: Double = 4.0
     
     private var dateFormatter: DateFormatter {
         let formatter = DateFormatter()
@@ -62,6 +63,7 @@ struct ContentView: View {
         var wind = 0.0
         var swell = 0.2
         var delta = 0.0
+        var windSpeed = 4.0
         
         if let cached = weatherCache[dateKey] {
             cloud = cached.cloudCover
@@ -69,6 +71,7 @@ struct ContentView: View {
             swell = cached.swellHeight
             delta = cached.surfaceTempDelta24h
             sst = cached.waterTemp
+            windSpeed = cached.windSpeedMps
         } else {
             let today = Date()
             let daysDifference = calendar.dateComponents([.day], from: calendar.startOfDay(for: today), to: startOfDay).day ?? 0
@@ -99,7 +102,8 @@ struct ContentView: View {
             cloudCoverPercent: cloud,
             windDirectionChange: wind,
             swellHeight: swell,
-            surfaceTempDelta24h: delta
+            surfaceTempDelta24h: delta,
+            windSpeedMps: windSpeed
         )
         
         let forecastResult = RulesEngine.evaluateForecast(
@@ -611,6 +615,23 @@ struct ContentView: View {
                                     
                                     Divider().background(Color.white.opacity(0.1))
                                     
+                                    // Wind Speed
+                                    HStack {
+                                        Image(systemName: "wind.circle.fill")
+                                            .foregroundColor(.yellow)
+                                            .frame(width: 20)
+                                        Text("Velocità Vento Sostenuto")
+                                            .font(.subheadline)
+                                            .foregroundColor(.white.opacity(0.8))
+                                        Spacer()
+                                        Text(String(format: "%.1f m/s", windSpeedMps))
+                                            .font(.subheadline)
+                                            .fontWeight(.bold)
+                                            .foregroundColor(.yellow)
+                                    }
+                                    
+                                    Divider().background(Color.white.opacity(0.1))
+                                    
                                     // Swell Height
                                     HStack {
                                         Image(systemName: "water.waves")
@@ -770,7 +791,8 @@ struct ContentView: View {
             cloudCoverPercent: cloudCover,
             windDirectionChange: windDirectionChange,
             swellHeight: swellHeight,
-            surfaceTempDelta24h: surfaceTempDelta24h
+            surfaceTempDelta24h: surfaceTempDelta24h,
+            windSpeedMps: windSpeedMps
         )
         
         let forecastResult = RulesEngine.evaluateForecast(
@@ -845,6 +867,7 @@ struct ContentView: View {
             self.swellHeight = cached.swellHeight
             self.surfaceTempDelta24h = cached.surfaceTempDelta24h
             self.waterTempCelsius = cached.waterTemp
+            self.windSpeedMps = cached.windSpeedMps
             self.weatherErrorMessage = nil
         } else {
             // Distant date (past or future)!
@@ -852,6 +875,7 @@ struct ContentView: View {
             self.windDirectionChange = 0.0
             self.swellHeight = 0.2
             self.surfaceTempDelta24h = 0.0
+            self.windSpeedMps = 4.0
             
             if daysDifference < -1 {
                 // Past date: just use climatological water temp

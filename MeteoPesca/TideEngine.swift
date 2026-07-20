@@ -5,13 +5,10 @@ public class TideEngine {
     // Representative tide gauge stations with M2, S2, N2, K1, O1 constituents
     // amplitudes (in meters) and phases (in degrees) calibrated for the Mediterranean
     public static let stations: [Location] = [
-        Location(name: "Sibari (Ionio)", latitude: 39.73, longitude: 16.48, tideLagDays: 1.5),
-        Location(name: "Crotone (Ionio)", latitude: 39.08, longitude: 17.13, tideLagDays: 1.5),
-        Location(name: "Taranto (Ionio)", latitude: 40.48, longitude: 17.22, tideLagDays: 1.5),
-        Location(name: "Reggio Calabria (Stretto)", latitude: 38.11, longitude: 15.65, tideLagDays: 1.2),
-        Location(name: "Salerno (Tirreno)", latitude: 40.68, longitude: 14.75, tideLagDays: 1.3),
-        Location(name: "Bari (Adriatico)", latitude: 41.13, longitude: 16.87, tideLagDays: 1.8),
-        Location(name: "Palermo (Tirreno)", latitude: 38.13, longitude: 13.37, tideLagDays: 1.2)
+        Location(name: "Sibari", latitude: 39.73, longitude: 16.48, tideLagDays: 1.5),
+        Location(name: "Trebisacce", latitude: 39.87, longitude: 16.53, tideLagDays: 1.5),
+        Location(name: "Corigliano", latitude: 39.60, longitude: 16.52, tideLagDays: 1.5),
+        Location(name: "Rossano", latitude: 39.57, longitude: 16.63, tideLagDays: 1.5)
     ]
     
     // Constituent speed in degrees per hour
@@ -25,56 +22,34 @@ public class TideEngine {
     
     // Harmonic constituents (Amplitude in meters, Phase in degrees)
     // for each station. Mediterranean range is micro-tidal.
-    // Stretto of Messina (Reggio Calabria) has higher amplitude due to currents.
     private static let constituents: [String: [String: (amp: Double, phase: Double)]] = [
-        "Sibari (Ionio)": [
+        "Trebisacce": [
             "M2": (0.08, 290.0),
             "S2": (0.03, 310.0),
             "N2": (0.02, 270.0),
             "K1": (0.04, 60.0),
             "O1": (0.03, 40.0)
         ],
-        "Crotone (Ionio)": [
-            "M2": (0.09, 295.0),
-            "S2": (0.04, 315.0),
-            "N2": (0.02, 275.0),
-            "K1": (0.04, 65.0),
-            "O1": (0.03, 45.0)
+        "Sibari": [
+            "M2": (0.08, 290.0),
+            "S2": (0.03, 310.0),
+            "N2": (0.02, 270.0),
+            "K1": (0.04, 60.0),
+            "O1": (0.03, 40.0)
         ],
-        "Taranto (Ionio)": [
-            "M2": (0.10, 305.0),
-            "S2": (0.04, 320.0),
-            "N2": (0.02, 280.0),
-            "K1": (0.05, 70.0),
-            "O1": (0.04, 50.0)
+        "Corigliano": [
+            "M2": (0.08, 290.0),
+            "S2": (0.03, 310.0),
+            "N2": (0.02, 270.0),
+            "K1": (0.04, 60.0),
+            "O1": (0.03, 40.0)
         ],
-        "Reggio Calabria (Stretto)": [ // Amplification in the strait
-            "M2": (0.22, 110.0),
-            "S2": (0.08, 125.0),
-            "N2": (0.04, 90.0),
-            "K1": (0.07, 280.0),
-            "O1": (0.05, 260.0)
-        ],
-        "Salerno (Tirreno)": [
-            "M2": (0.11, 280.0),
-            "S2": (0.04, 295.0),
-            "N2": (0.02, 260.0),
-            "K1": (0.05, 50.0),
-            "O1": (0.03, 35.0)
-        ],
-        "Bari (Adriatico)": [
-            "M2": (0.13, 270.0),
-            "S2": (0.05, 290.0),
-            "N2": (0.03, 250.0),
-            "K1": (0.06, 45.0),
-            "O1": (0.04, 30.0)
-        ],
-        "Palermo (Tirreno)": [
-            "M2": (0.10, 275.0),
-            "S2": (0.04, 290.0),
-            "N2": (0.02, 255.0),
-            "K1": (0.05, 52.0),
-            "O1": (0.03, 33.0)
+        "Rossano": [
+            "M2": (0.08, 290.0),
+            "S2": (0.03, 310.0),
+            "N2": (0.02, 270.0),
+            "K1": (0.04, 60.0),
+            "O1": (0.03, 40.0)
         ]
     ]
     
@@ -97,7 +72,7 @@ public class TideEngine {
     public static func referenceSpringAmplitude(for coordinate: Coordinate) -> Double {
         let station = findNearestStation(to: coordinate)
         let stationName = station.name
-        let stationConsts = constituents[stationName] ?? constituents["Sibari (Ionio)"]!
+        let stationConsts = constituents[stationName] ?? constituents["Sibari"]!
         let m2Amp = stationConsts["M2"]?.amp ?? 0.08
         let s2Amp = stationConsts["S2"]?.amp ?? 0.03
         // Spring amplitude is physically the sum of the M2 and S2 amplitudes
@@ -127,7 +102,7 @@ public class TideEngine {
     public static func calculateHeight(at date: Date, coordinate: Coordinate) -> Double {
         let station = findNearestStation(to: coordinate)
         let stationName = station.name
-        let stationConsts = constituents[stationName] ?? constituents["Sibari (Ionio)"]!
+        let stationConsts = constituents[stationName] ?? constituents["Sibari"]!
         
         // J2000 Epoch reference: January 1, 2000, 12:00 UTC
         var calendar = Calendar.current

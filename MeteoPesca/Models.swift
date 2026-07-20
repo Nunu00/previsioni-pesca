@@ -155,12 +155,14 @@ public struct WeatherFactor: Codable, Hashable {
     public var windDirectionChange: Double    // gradi di variazione ultime 3h
     public var swellHeight: Double            // metri, se disponibile per zona costiera
     public var surfaceTempDelta24h: Double    // variazione °C ultime 24h
+    public var windSpeedMps: Double           // velocità del vento sostenuto in m/s
 
-    public init(cloudCoverPercent: Double, windDirectionChange: Double, swellHeight: Double, surfaceTempDelta24h: Double) {
+    public init(cloudCoverPercent: Double, windDirectionChange: Double, swellHeight: Double, surfaceTempDelta24h: Double, windSpeedMps: Double) {
         self.cloudCoverPercent = cloudCoverPercent
         self.windDirectionChange = windDirectionChange
         self.swellHeight = swellHeight
         self.surfaceTempDelta24h = surfaceTempDelta24h
+        self.windSpeedMps = windSpeedMps
     }
 
     public func multiplier() -> Double {
@@ -173,6 +175,13 @@ public struct WeatherFactor: Codable, Hashable {
         if swellHeight > 0.5 { m += 0.10 }
         // Rottura della stratificazione termica in estate: bonus se calo repentino
         if surfaceTempDelta24h < -1.5 { m += 0.10 }
-        return m
+        
+        // Nuova curva gaussiana per il vento sostenuto (ottimo a 7.2 m/s, range moltiplicatore 0.7–1.2)
+        let optimal = 7.2
+        let sigma = 4.0
+        let gaussian = exp(-pow(windSpeedMps - optimal, 2) / (2.0 * pow(sigma, 2)))
+        let windMult = 0.7 + 0.5 * gaussian
+        
+        return m * windMult
     }
 }
