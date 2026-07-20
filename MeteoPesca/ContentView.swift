@@ -5,6 +5,7 @@ struct ContentView: View {
     @State private var selectedLocation: Location = TideEngine.stations[0]
     @State private var savedLocations: [Location] = TideEngine.stations
     @State private var forecast: DailyForecast?
+    private static var activityCache: [String: ActivityLevel] = [:]
     
     // Environmental conditions state variables
     @State private var cloudCover: Double = 20.0
@@ -49,12 +50,19 @@ struct ContentView: View {
     private func activityForDate(_ date: Date) -> ActivityLevel {
         let calendar = Calendar.current
         let startOfDay = calendar.startOfDay(for: date)
-        let coord = selectedLocation.coordinate
+        let dateKey = cacheKeyFormatter.string(from: startOfDay)
         
+        let hasWeather = weatherCache[dateKey] != nil
+        let cacheKey = "\(selectedLocation.name)_\(dateKey)_\(hasWeather ? "w" : "c")"
+        
+        if let cached = Self.activityCache[cacheKey] {
+            return cached
+        }
+        
+        let coord = selectedLocation.coordinate
         let astro = AstronomyEngine.calculateAstronomy(date: startOfDay, coordinate: coord)
         let tides = TideEngine.calculateDailyTides(date: startOfDay, coordinate: coord)
         
-        let dateKey = cacheKeyFormatter.string(from: startOfDay)
         var sst = 20.0
         var cloud = 20.0
         var wind = 0.0
@@ -118,7 +126,9 @@ struct ContentView: View {
             waterTempCelsius: sst
         )
         
-        return forecastResult.dailyActivity
+        let activity = forecastResult.dailyActivity
+        Self.activityCache[cacheKey] = activity
+        return activity
     }
     
     private func monthYearString(for date: Date) -> String {
