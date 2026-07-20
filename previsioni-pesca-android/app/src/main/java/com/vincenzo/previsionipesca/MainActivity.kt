@@ -918,23 +918,40 @@ fun DailyActivitySummaryCard(forecast: DailyForecast) {
 }
 
 @Composable
-fun AstroRowItem(label: String, value: String, modifier: Modifier = Modifier) {
+fun AstroItemRow(icon: String, label: String, value: String) {
     Row(
-        modifier = modifier.padding(vertical = 2.dp),
+        modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Text(
-            text = label,
-            color = Color.White.copy(alpha = 0.8f),
-            fontSize = 13.sp
-        )
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text(text = icon, fontSize = 11.sp)
+            Spacer(modifier = Modifier.width(6.dp))
+            Text(
+                text = label,
+                color = Color.White.copy(alpha = 0.7f),
+                fontSize = 11.sp
+            )
+        }
         Text(
             text = value,
             color = Color.White,
-            fontSize = 13.sp,
+            fontSize = 11.sp,
             fontWeight = FontWeight.Bold
         )
+    }
+}
+
+fun getMoonPhaseEmoji(age: Double): String {
+    return when {
+        age < 1.5 || age > 28.0 -> "🌑" // New Moon
+        age < 6.5 -> "🌒" // Waxing Crescent
+        age < 8.3 -> "🌓" // First Quarter
+        age < 13.3 -> "🌔" // Waxing Gibbous
+        age < 16.3 -> "🌕" // Full Moon
+        age < 21.2 -> "🌖" // Waning Gibbous
+        age < 23.0 -> "🌗" // Last Quarter
+        else -> "🌘" // Waning Crescent
     }
 }
 
@@ -956,22 +973,53 @@ fun AstroDetailsCard(forecast: DailyForecast) {
                 fontWeight = FontWeight.Bold
             )
 
-            Spacer(modifier = Modifier.height(12.dp))
+            Spacer(modifier = Modifier.height(14.dp))
 
-            VStack(spacing = 8) {
-                AstroRowItem(label = "☀️ Alba Sole", value = formatTime(forecast.sunrise), modifier = Modifier.fillMaxWidth())
-                Divider(color = Color.White.copy(alpha = 0.05f))
-                AstroRowItem(label = "☀️ Tramonto Sole", value = formatTime(forecast.sunset), modifier = Modifier.fillMaxWidth())
-                Divider(color = Color.White.copy(alpha = 0.05f))
-                AstroRowItem(label = "🌙 Alba Luna", value = formatTime(forecast.moonrise), modifier = Modifier.fillMaxWidth())
-                Divider(color = Color.White.copy(alpha = 0.05f))
-                AstroRowItem(label = "🌙 Tramonto Luna", value = formatTime(forecast.moonset), modifier = Modifier.fillMaxWidth())
-                Divider(color = Color.White.copy(alpha = 0.05f))
-                AstroRowItem(label = "🎯 Transito Luna", value = formatTime(forecast.moonTransit), modifier = Modifier.fillMaxWidth())
-                Divider(color = Color.White.copy(alpha = 0.05f))
-                AstroRowItem(label = "🌓 Fase Lunare", value = forecast.moonPhase, modifier = Modifier.fillMaxWidth())
-                Divider(color = Color.White.copy(alpha = 0.05f))
-                AstroRowItem(label = "🎚️ Coeff. Marea", value = "${forecast.tideCoefficient.toInt()}", modifier = Modifier.fillMaxWidth())
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                // Left Column: Moon Emoji & Phase Name
+                Column(
+                    modifier = Modifier.width(100.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Text(
+                        text = getMoonPhaseEmoji(forecast.moonAge),
+                        fontSize = 48.sp
+                    )
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(
+                        text = forecast.moonPhase,
+                        color = Color.White.copy(alpha = 0.8f),
+                        fontSize = 11.sp,
+                        fontWeight = FontWeight.Bold,
+                        textAlign = TextAlign.Center
+                    )
+                }
+
+                // Vertical Divider
+                Spacer(modifier = Modifier.width(16.dp))
+                Box(
+                    modifier = Modifier
+                        .height(130.dp)
+                        .width(1.dp)
+                        .background(Color.White.copy(alpha = 0.1f))
+                )
+                Spacer(modifier = Modifier.width(16.dp))
+
+                // Right Column: Astro Info list
+                Column(
+                    modifier = Modifier.weight(1f),
+                    verticalArrangement = Arrangement.spacedBy(6.dp)
+                ) {
+                    AstroItemRow(icon = "☀️", label = "Alba Sole", value = formatTime(forecast.sunrise))
+                    AstroItemRow(icon = "☀️", label = "Tramonto Sole", value = formatTime(forecast.sunset))
+                    AstroItemRow(icon = "🌙", label = "Alba Luna", value = formatTime(forecast.moonrise))
+                    AstroItemRow(icon = "🌙", label = "Tramonto Luna", value = formatTime(forecast.moonset))
+                    AstroItemRow(icon = "🎯", label = "Transito Luna", value = formatTime(forecast.moonTransit))
+                    AstroItemRow(icon = "🎚️", label = "Coeff. Marea", value = "${forecast.tideCoefficient.toInt()}")
+                }
             }
         }
     }

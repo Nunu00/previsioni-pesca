@@ -22,9 +22,16 @@ data class AstronomyData(
 
 object AstronomyEngine {
     fun calculateAstronomy(date: Date, coordinate: Coordinate): AstronomyData {
-        // Convert Date to ZonedDateTime (using system default zone id)
         val zoneId = ZoneId.systemDefault()
-        val zdt = ZonedDateTime.ofInstant(date.toInstant(), zoneId)
+        // Convert to local mid-day (12:00) to get representative day coordinates
+        val cal = Calendar.getInstance().apply {
+            time = date
+            set(Calendar.HOUR_OF_DAY, 12)
+            set(Calendar.MINUTE, 0)
+            set(Calendar.SECOND, 0)
+            set(Calendar.MILLISECOND, 0)
+        }
+        val zdt = ZonedDateTime.ofInstant(cal.time.toInstant(), zoneId)
 
         // Sun rise and set
         val sunTimes = SunTimes.compute()
@@ -46,11 +53,14 @@ object AstronomyEngine {
         val moonTransit = findMoonTransit(zdt, coordinate.latitude, coordinate.longitude)
         val moonAntiTransit = findMoonAntiTransit(zdt, coordinate.latitude, coordinate.longitude)
 
-        // Moon Age: shredzone MoonIllumination getPhase() range [-180, 180] (where -180 is new moon, 0 is full moon)
+        // Moon Age: shredzone MoonIllumination getPhase() range [-180, 180] (where 0 is new moon, 180 is full moon)
         val illumination = MoonIllumination.compute()
             .on(zdt)
             .execute()
-        val phaseDeg = illumination.phase + 180.0 // range [0, 360]
+        var phaseDeg = illumination.phase
+        if (phaseDeg < 0.0) {
+            phaseDeg += 360.0
+        }
         val moonAge = (phaseDeg / 360.0) * 29.53059
 
         // Moon Distance in kilometers

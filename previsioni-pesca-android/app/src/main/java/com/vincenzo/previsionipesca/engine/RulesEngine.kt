@@ -266,15 +266,20 @@ object RulesEngine {
     }
 
     private fun getMoonPhaseName(phaseAngle: Double): String {
+        var deg = phaseAngle
+        if (deg < 0.0) {
+            deg += 360.0
+        }
         return when {
-            phaseAngle < -170 || phaseAngle > 170 -> "Luna Nuova"
-            phaseAngle >= -170 && phaseAngle < -100 -> "Crescente"
-            phaseAngle >= -100 && phaseAngle < -80 -> "Primo Quarto"
-            phaseAngle >= -80 && phaseAngle < -10 -> "Gibbosa Crescente"
-            phaseAngle >= -10 && phaseAngle < 10 -> "Luna Piena"
-            phaseAngle >= 10 && phaseAngle < 80 -> "Gibbosa Calante"
-            phaseAngle >= 80 && phaseAngle < 100 -> "Ultimo Quarto"
-            else -> "Calante"
+            deg >= 0.0 && deg < 22.5 -> "Luna Nuova"
+            deg >= 337.5 && deg <= 360.0 -> "Luna Nuova"
+            deg >= 22.5 && deg < 67.5 -> "Luna Crescente (Falce)"
+            deg >= 67.5 && deg < 112.5 -> "Primo Quarto"
+            deg >= 112.5 && deg < 157.5 -> "Gibbosa Crescente"
+            deg >= 157.5 && deg < 202.5 -> "Luna Piena"
+            deg >= 202.5 && deg < 247.5 -> "Gibbosa Calante"
+            deg >= 247.5 && deg < 292.5 -> "Ultimo Quarto"
+            else -> "Luna Calante (Falce)"
         }
     }
 
