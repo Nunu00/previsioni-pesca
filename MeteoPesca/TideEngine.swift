@@ -9,9 +9,13 @@ public class TideEngine {
         Location(name: "Trebisacce", latitude: 39.87, longitude: 16.53, tideLagDays: 1.5),
         Location(name: "Corigliano", latitude: 39.60, longitude: 16.52, tideLagDays: 1.5),
         Location(name: "Rossano", latitude: 39.57, longitude: 16.63, tideLagDays: 1.5),
+        Location(name: "Le Castella", latitude: 38.91, longitude: 17.02, tideLagDays: 1.5),
+        Location(name: "Soverato", latitude: 38.68, longitude: 16.55, tideLagDays: 1.5),
+        Location(name: "Roccella Ionica", latitude: 38.32, longitude: 16.41, tideLagDays: 1.5),
         Location(name: "Cetraro (Tirreno)", latitude: 39.52, longitude: 15.94, tideLagDays: 1.3),
-        Location(name: "Diamante (Tirreno)", latitude: 39.68, longitude: 15.81, tideLagDays: 1.3),
-        Location(name: "Praia a Mare (Tirreno)", latitude: 39.90, longitude: 15.78, tideLagDays: 1.3)
+        Location(name: "Amantea (Tirreno)", latitude: 39.13, longitude: 16.07, tideLagDays: 1.3),
+        Location(name: "Tropea (Tirreno)", latitude: 38.68, longitude: 15.90, tideLagDays: 1.3),
+        Location(name: "Scilla (Tirreno)", latitude: 38.25, longitude: 15.72, tideLagDays: 1.2)
     ]
     
     // Constituent speed in degrees per hour
@@ -27,53 +31,37 @@ public class TideEngine {
     // for each station. Mediterranean range is micro-tidal.
     private static let constituents: [String: [String: (amp: Double, phase: Double)]] = [
         "Trebisacce": [
-            "M2": (0.08, 290.0),
-            "S2": (0.03, 310.0),
-            "N2": (0.02, 270.0),
-            "K1": (0.04, 60.0),
-            "O1": (0.03, 40.0)
+            "M2": (0.08, 290.0), "S2": (0.03, 310.0), "N2": (0.02, 270.0), "K1": (0.04, 60.0), "O1": (0.03, 40.0)
         ],
         "Sibari": [
-            "M2": (0.08, 290.0),
-            "S2": (0.03, 310.0),
-            "N2": (0.02, 270.0),
-            "K1": (0.04, 60.0),
-            "O1": (0.03, 40.0)
+            "M2": (0.08, 290.0), "S2": (0.03, 310.0), "N2": (0.02, 270.0), "K1": (0.04, 60.0), "O1": (0.03, 40.0)
         ],
         "Corigliano": [
-            "M2": (0.08, 290.0),
-            "S2": (0.03, 310.0),
-            "N2": (0.02, 270.0),
-            "K1": (0.04, 60.0),
-            "O1": (0.03, 40.0)
+            "M2": (0.08, 290.0), "S2": (0.03, 310.0), "N2": (0.02, 270.0), "K1": (0.04, 60.0), "O1": (0.03, 40.0)
         ],
         "Rossano": [
-            "M2": (0.08, 290.0),
-            "S2": (0.03, 310.0),
-            "N2": (0.02, 270.0),
-            "K1": (0.04, 60.0),
-            "O1": (0.03, 40.0)
+            "M2": (0.08, 290.0), "S2": (0.03, 310.0), "N2": (0.02, 270.0), "K1": (0.04, 60.0), "O1": (0.03, 40.0)
+        ],
+        "Le Castella": [
+            "M2": (0.09, 295.0), "S2": (0.04, 315.0), "N2": (0.02, 275.0), "K1": (0.04, 65.0), "O1": (0.03, 45.0)
+        ],
+        "Soverato": [
+            "M2": (0.10, 305.0), "S2": (0.04, 320.0), "N2": (0.02, 280.0), "K1": (0.05, 70.0), "O1": (0.04, 50.0)
+        ],
+        "Roccella Ionica": [
+            "M2": (0.10, 305.0), "S2": (0.04, 320.0), "N2": (0.02, 280.0), "K1": (0.05, 70.0), "O1": (0.04, 50.0)
         ],
         "Cetraro (Tirreno)": [
-            "M2": (0.11, 280.0),
-            "S2": (0.04, 295.0),
-            "N2": (0.02, 260.0),
-            "K1": (0.05, 50.0),
-            "O1": (0.03, 35.0)
+            "M2": (0.11, 280.0), "S2": (0.04, 295.0), "N2": (0.02, 260.0), "K1": (0.05, 50.0), "O1": (0.03, 35.0)
         ],
-        "Diamante (Tirreno)": [
-            "M2": (0.11, 280.0),
-            "S2": (0.04, 295.0),
-            "N2": (0.02, 260.0),
-            "K1": (0.05, 50.0),
-            "O1": (0.03, 35.0)
+        "Amantea (Tirreno)": [
+            "M2": (0.11, 280.0), "S2": (0.04, 295.0), "N2": (0.02, 260.0), "K1": (0.05, 50.0), "O1": (0.03, 35.0)
         ],
-        "Praia a Mare (Tirreno)": [
-            "M2": (0.11, 280.0),
-            "S2": (0.04, 295.0),
-            "N2": (0.02, 260.0),
-            "K1": (0.05, 50.0),
-            "O1": (0.03, 35.0)
+        "Tropea (Tirreno)": [
+            "M2": (0.11, 280.0), "S2": (0.04, 295.0), "N2": (0.02, 260.0), "K1": (0.05, 50.0), "O1": (0.03, 35.0)
+        ],
+        "Scilla (Tirreno)": [
+            "M2": (0.22, 110.0), "S2": (0.08, 125.0), "N2": (0.04, 90.0), "K1": (0.07, 280.0), "O1": (0.05, 260.0)
         ]
     ]
     
