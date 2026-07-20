@@ -359,8 +359,7 @@ public class RulesEngine {
             let midSlotDate = slotStart.addingTimeInterval(450.0)
             let tideFactor = calculateTidalActivityFactor(date: midSlotDate, tides: tides, coordinate: location.coordinate, maxAmplitude: maxAmplitude)
             
-            let baseScore = 0.5
-            var slotScore = baseScore * solunarFactor * tideFactor * weatherMult * fWaterTemp * fPhase * fDist * fCoeff
+            var slotScore = solunarFactor * tideFactor * weatherMult * fWaterTemp * fPhase * fDist * fCoeff
             slotScore = min(slotScore, 1.8)
             
             let breakdown = ScoreBreakdown(
