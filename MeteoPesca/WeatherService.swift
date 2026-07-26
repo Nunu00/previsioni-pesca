@@ -11,6 +11,16 @@ public struct FetchedWeatherData {
 
 public class WeatherService {
     
+    private static func parseDoubleArray(_ raw: Any?) -> [Double?] {
+        guard let array = raw as? [Any] else { return [] }
+        return array.map { item in
+            if let num = item as? NSNumber {
+                return num.doubleValue
+            }
+            return nil
+        }
+    }
+    
     public static func fetch7DayWeather(latitude: Double, longitude: Double) async throws -> [String: FetchedWeatherData] {
         // 1. Fetch Forecast Data (Atmospheric Conditions for 7 days)
         let forecastUrlString = "https://api.open-meteo.com/v1/forecast?latitude=\(latitude)&longitude=\(longitude)&hourly=cloud_cover,wind_direction_10m,temperature_2m,wind_speed_10m&wind_speed_unit=ms&forecast_days=7&timezone=auto"
@@ -23,23 +33,23 @@ public class WeatherService {
         
         let hourly = forecastJSON?["hourly"] as? [String: Any]
         let hourlyTime = hourly?["time"] as? [String] ?? []
-        let hourlyCloud = hourly?["cloud_cover"] as? [Double] ?? []
-        let hourlyWind = hourly?["wind_direction_10m"] as? [Double] ?? []
-        let hourlyAir = hourly?["temperature_2m"] as? [Double] ?? []
-        let hourlyWindSpeed = hourly?["wind_speed_10m"] as? [Double] ?? []
+        let hourlyCloud = parseDoubleArray(hourly?["cloud_cover"])
+        let hourlyWind = parseDoubleArray(hourly?["wind_direction_10m"])
+        let hourlyAir = parseDoubleArray(hourly?["temperature_2m"])
+        let hourlyWindSpeed = parseDoubleArray(hourly?["wind_speed_10m"])
         
         // 2. Fetch Marine Data (Native Sea Surface Temperature & Swell Height for 7 days)
         let marineUrlString = "https://marine-api.open-meteo.com/v1/marine?latitude=\(latitude)&longitude=\(longitude)&hourly=sea_surface_temperature,wave_height&forecast_days=7&timezone=auto"
-        var hourlySst: [Double] = []
-        var hourlyWave: [Double] = []
+        var hourlySst: [Double?] = []
+        var hourlyWave: [Double?] = []
         
         if let marineUrl = URL(string: marineUrlString) {
             do {
                 let (marineData, _) = try await URLSession.shared.data(from: marineUrl)
                 if let marineJSON = try JSONSerialization.jsonObject(with: marineData) as? [String: Any],
                    let hourlyMarine = marineJSON["hourly"] as? [String: Any] {
-                    hourlySst = hourlyMarine["sea_surface_temperature"] as? [Double] ?? []
-                    hourlyWave = hourlyMarine["wave_height"] as? [Double] ?? []
+                    hourlySst = parseDoubleArray(hourlyMarine["sea_surface_temperature"])
+                    hourlyWave = parseDoubleArray(hourlyMarine["wave_height"])
                 }
             } catch {
                 print("Marine API fetch failed or coordinates inland: \(error)")
@@ -58,16 +68,17 @@ public class WeatherService {
             // Get date string (first 10 chars of ISO string: "yyyy-MM-dd")
             let dateStr = String(hourlyTime[startIndex].prefix(10))
             
-            // Slice hourly values
-            let cloudSlice = hourlyCloud.count >= endIndex ? Array(hourlyCloud[startIndex..<endIndex]) : []
-            let windSlice = hourlyWind.count >= endIndex ? Array(hourlyWind[startIndex..<endIndex]) : []
-            let airSlice = hourlyAir.count >= endIndex ? Array(hourlyAir[startIndex..<endIndex]) : []
-            let sstSlice = hourlySst.count >= endIndex ? Array(hourlySst[startIndex..<endIndex]) : []
-            let waveSlice = hourlyWave.count >= endIndex ? Array(hourlyWave[startIndex..<endIndex]) : []
-            let windSpeedSlice = hourlyWindSpeed.count >= endIndex ? Array(hourlyWindSpeed[startIndex..<endIndex]) : []
+            // Slice hourly values and filter non-nil
+            let cloudSlice = (hourlyCloud.count >= endIndex ? Array(hourlyCloud[startIndex..<endIndex]) : Array(hourlyCloud.dropFirst(startIndex))).compactMap { $0 }
+            let windSlice = (hourlyWind.count >= endIndex ? Array(hourlyWind[startIndex..<endIndex]) : Array(hourlyWind.dropFirst(startIndex))).compactMap { $0 }
+            let airSlice = (hourlyAir.count >= endIndex ? Array(hourlyAir[startIndex..<endIndex]) : Array(hourlyAir.dropFirst(startIndex))).compactMap { $0 }
+            let sstSlice = (hourlySst.count >= endIndex ? Array(hourlySst[startIndex..<endIndex]) : Array(hourlySst.dropFirst(startIndex))).compactMap { $0 }
+            let waveSlice = (hourlyWave.count >= endIndex ? Array(hourlyWave[startIndex..<endIndex]) : Array(hourlyWave.dropFirst(startIndex))).compactMap { $0 }
+            let windSpeedSlice = (hourlyWindSpeed.count >= endIndex ? Array(hourlyWindSpeed[startIndex..<endIndex]) : Array(hourlyWindSpeed.dropFirst(startIndex))).compactMap { $0 }
             
             // Calculate averages / representatives
             let avgCloud = cloudSlice.isEmpty ? 20.0 : cloudSlice.reduce(0.0, +) / Double(cloudSlice.count)
+            let avgWind = windSpeedSlice.isEmpty ? 4.0 : windSpeedSlice.reduce(0.0, +) / Double(windSpeedSlice.count)
             
             // Wind direction change over last 3 hours of mid-day
             var windChange = 10.0
@@ -78,8 +89,14 @@ public class WeatherService {
             
             let tempDelta = airSlice.count >= 24 ? airSlice[23] - airSlice[0] : 0.0
             let avgSst = sstSlice.isEmpty ? 20.0 : sstSlice.reduce(0.0, +) / Double(sstSlice.count)
-            let maxWave = waveSlice.isEmpty ? 0.2 : waveSlice.reduce(0.0, max)
-            let avgWind = windSpeedSlice.isEmpty ? 4.0 : windSpeedSlice.reduce(0.0, +) / Double(windSpeedSlice.count)
+            
+            // Max wave height: use marine API data if present, or dynamic estimation based on wind speed
+            let maxWave: Double
+            if !waveSlice.isEmpty {
+                maxWave = waveSlice.reduce(0.0, max)
+            } else {
+                maxWave = max(0.1, avgWind * 0.08)
+            }
             
             result[dateStr] = FetchedWeatherData(
                 waterTemp: avgSst,

@@ -578,7 +578,7 @@ struct ContentView: View {
                                             .font(.subheadline)
                                             .foregroundColor(.white.opacity(0.8))
                                         Spacer()
-                                        Text(String(format: "%.1f m", swellHeight))
+                                        Text(String(format: "%.2f m", swellHeight))
                                             .font(.subheadline)
                                             .fontWeight(.bold)
                                             .foregroundColor(.blue)
