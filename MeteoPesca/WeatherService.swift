@@ -80,14 +80,21 @@ public class WeatherService {
             let avgCloud = cloudSlice.isEmpty ? 20.0 : cloudSlice.reduce(0.0, +) / Double(cloudSlice.count)
             let avgWind = windSpeedSlice.isEmpty ? 4.0 : windSpeedSlice.reduce(0.0, +) / Double(windSpeedSlice.count)
             
-            // Wind direction change over last 3 hours of mid-day
+            // Max wind direction change over any 3-hour window during the day
             var windChange = 10.0
-            if windSlice.count > 12 {
-                let change = abs(windSlice[12] - windSlice[9])
-                windChange = change > 180.0 ? 360.0 - change : change
+            if windSlice.count >= 4 {
+                var maxDiff = 0.0
+                for i in 3..<windSlice.count {
+                    let diff = abs(windSlice[i] - windSlice[i - 3])
+                    let shortestDiff = diff > 180.0 ? 360.0 - diff : diff
+                    if shortestDiff > maxDiff {
+                        maxDiff = shortestDiff
+                    }
+                }
+                windChange = maxDiff
             }
             
-            let tempDelta = airSlice.count >= 24 ? airSlice[23] - airSlice[0] : 0.0
+            let tempDelta = airSlice.count >= 2 ? airSlice[airSlice.count - 1] - airSlice[0] : 0.0
             let avgSst = sstSlice.isEmpty ? 20.0 : sstSlice.reduce(0.0, +) / Double(sstSlice.count)
             
             // Max wave height: use marine API data if present, or dynamic estimation based on wind speed
