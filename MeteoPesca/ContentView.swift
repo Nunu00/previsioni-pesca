@@ -1360,6 +1360,204 @@ struct FactorRow: View {
 }
 
 
+struct HourlyCellView: View {
+    let interval: HourlyInterval
+    let isCurrent: Bool
+    let isSelected: Bool
+    let onTap: () -> Void
+    
+    private var efficacy: Int {
+        min(100, Int(round((interval.score / 1.8) * 100.0)))
+    }
+    
+    private var color: Color {
+        switch interval.activity {
+        case .bassa: return .gray
+        case .moderata: return .cyan
+        case .buona: return .yellow
+        case .alta: return .orange
+        case .moltoAlta: return .green
+        }
+    }
+    
+    private var cellBackground: Color {
+        if isCurrent {
+            return Color.cyan.opacity(0.15)
+        } else if isSelected {
+            return Color.white.opacity(0.12)
+        } else {
+            return Color.white.opacity(0.03)
+        }
+    }
+    
+    private var borderStrokeColor: Color {
+        if isCurrent {
+            return Color.cyan
+        } else if isSelected {
+            return color
+        } else {
+            return Color.white.opacity(0.06)
+        }
+    }
+    
+    private var strokeLineWidth: CGFloat {
+        if isCurrent {
+            return 2.0
+        } else if isSelected {
+            return 1.5
+        } else {
+            return 1.0
+        }
+    }
+
+    var body: some View {
+        VStack(spacing: 5) {
+            HStack(spacing: 2) {
+                Text(String(format: "%02d:00", interval.hour))
+                    .font(.system(size: 10, weight: (isSelected || isCurrent) ? .bold : .medium))
+                    .foregroundColor(isCurrent ? .cyan : (isSelected ? .white : .white.opacity(0.7)))
+                
+                if isCurrent {
+                    Text("ORA")
+                        .font(.system(size: 7, weight: .black))
+                        .padding(.horizontal, 3)
+                        .padding(.vertical, 1)
+                        .background(Color.cyan)
+                        .foregroundColor(.black)
+                        .cornerRadius(3)
+                }
+            }
+            
+            Group {
+                if interval.isEnhanced {
+                    Text("🔥")
+                        .font(.system(size: 10))
+                } else if interval.isMajorPeriod {
+                    Image(systemName: "bolt.fill")
+                        .font(.system(size: 9))
+                        .foregroundColor(.orange)
+                } else if interval.isMinorPeriod {
+                    Image(systemName: "bolt")
+                        .font(.system(size: 9))
+                        .foregroundColor(.cyan)
+                } else {
+                    Circle()
+                        .fill(isCurrent ? Color.cyan : color.opacity(0.8))
+                        .frame(width: 4, height: 4)
+                }
+            }
+            .frame(height: 12)
+            
+            Text("\(efficacy)%")
+                .font(.system(size: 9, weight: .bold))
+                .foregroundColor(isSelected ? .black : color)
+                .padding(.horizontal, 5)
+                .padding(.vertical, 3)
+                .background(isSelected ? color : color.opacity(0.2))
+                .cornerRadius(6)
+            
+            Text(interval.activity.rawValue)
+                .font(.system(size: 7, weight: .semibold))
+                .foregroundColor(.white.opacity(0.6))
+                .lineLimit(1)
+        }
+        .padding(.vertical, 8)
+        .padding(.horizontal, 6)
+        .frame(width: 58)
+        .background(cellBackground)
+        .cornerRadius(10)
+        .overlay(
+            RoundedRectangle(cornerRadius: 10)
+                .stroke(borderStrokeColor, lineWidth: strokeLineWidth)
+        )
+        .onTapGesture {
+            onTap()
+        }
+    }
+}
+
+struct HourlyDetailBannerView: View {
+    let interval: HourlyInterval
+    let isCurrent: Bool
+    
+    private var efficacy: Int {
+        min(100, Int(round((interval.score / 1.8) * 100.0)))
+    }
+    
+    private var color: Color {
+        switch interval.activity {
+        case .bassa: return .gray
+        case .moderata: return .cyan
+        case .buona: return .yellow
+        case .alta: return .orange
+        case .moltoAlta: return .green
+        }
+    }
+    
+    var body: some View {
+        HStack(spacing: 12) {
+            VStack(alignment: .leading, spacing: 4) {
+                HStack(spacing: 6) {
+                    Text(String(format: "%02d:00 – %02d:00", interval.hour, (interval.hour + 1) % 24))
+                        .font(.system(size: 13, weight: .bold))
+                        .foregroundColor(.white)
+                    
+                    if isCurrent {
+                        Text("ORA IN CORSO")
+                            .font(.system(size: 8, weight: .black))
+                            .padding(.horizontal, 5)
+                            .padding(.vertical, 2)
+                            .background(Color.cyan)
+                            .foregroundColor(.black)
+                            .cornerRadius(4)
+                    }
+                    
+                    Text(interval.activity.description)
+                        .font(.system(size: 9, weight: .bold))
+                        .padding(.horizontal, 6)
+                        .padding(.vertical, 2)
+                        .background(color.opacity(0.25))
+                        .foregroundColor(color)
+                        .cornerRadius(4)
+                }
+                
+                Text("Indice di efficacia stimato: \(efficacy)%")
+                    .font(.system(size: 10))
+                    .foregroundColor(.white.opacity(0.7))
+            }
+            
+            Spacer()
+            
+            VStack(alignment: .trailing, spacing: 2) {
+                if interval.isEnhanced {
+                    Text("🔥 Solunare + Alba/Tramonto")
+                        .font(.system(size: 9, weight: .semibold))
+                        .foregroundColor(.red)
+                } else if interval.isMajorPeriod {
+                    Text("⚡ Periodo Maggiore")
+                        .font(.system(size: 9, weight: .semibold))
+                        .foregroundColor(.orange)
+                } else if interval.isMinorPeriod {
+                    Text("🌑 Periodo Minore")
+                        .font(.system(size: 9, weight: .semibold))
+                        .foregroundColor(.cyan)
+                } else {
+                    Text("Attività Ordinaria")
+                        .font(.system(size: 9))
+                        .foregroundColor(.white.opacity(0.5))
+                }
+            }
+        }
+        .padding(10)
+        .background(isCurrent ? Color.cyan.opacity(0.12) : Color.white.opacity(0.06))
+        .cornerRadius(10)
+        .overlay(
+            RoundedRectangle(cornerRadius: 10)
+                .stroke(isCurrent ? Color.cyan.opacity(0.5) : color.opacity(0.3), lineWidth: 1)
+        )
+    }
+}
+
 struct HourlyActivityView: View {
     let intervals: [HourlyInterval]
     let date: Date
@@ -1368,6 +1566,7 @@ struct HourlyActivityView: View {
     var body: some View {
         let isToday = Calendar.current.isDate(date, inSameDayAs: Date())
         let currentHour = Calendar.current.component(.hour, from: Date())
+        let activeHour = selectedHour ?? (isToday ? currentHour : nil)
         
         VStack(alignment: .leading, spacing: 12) {
             HStack {
@@ -1397,78 +1596,22 @@ struct HourlyActivityView: View {
                         ForEach(intervals) { interval in
                             let isCurrent = isToday && (interval.hour == currentHour)
                             let isSelected = selectedHour == interval.hour || (selectedHour == nil && isCurrent)
-                            let efficacy = min(100, Int(round((interval.score / 1.8) * 100.0)))
-                            let color = colorForActivity(interval.activity)
                             
-                            VStack(spacing: 5) {
-                                HStack(spacing: 2) {
-                                    Text(String(format: "%02d:00", interval.hour))
-                                        .font(.system(size: 10, weight: (isSelected || isCurrent) ? .bold : .medium))
-                                        .foregroundColor(isCurrent ? .cyan : (isSelected ? .white : .white.opacity(0.7)))
-                                    
-                                    if isCurrent {
-                                        Text("ORA")
-                                            .font(.system(size: 7, weight: .black))
-                                            .padding(.horizontal, 3)
-                                            .padding(.vertical, 1)
-                                            .background(Color.cyan)
-                                            .foregroundColor(.black)
-                                            .cornerRadius(3)
+                            HourlyCellView(
+                                interval: interval,
+                                isCurrent: isCurrent,
+                                isSelected: isSelected,
+                                onTap: {
+                                    withAnimation(.easeInOut(duration: 0.2)) {
+                                        if selectedHour == interval.hour {
+                                            selectedHour = nil
+                                        } else {
+                                            selectedHour = interval.hour
+                                        }
                                     }
                                 }
-                                
-                                Group {
-                                    if interval.isEnhanced {
-                                        Text("🔥")
-                                            .font(.system(size: 10))
-                                    } else if interval.isMajorPeriod {
-                                        Image(systemName: "bolt.fill")
-                                            .font(.system(size: 9))
-                                            .foregroundColor(.orange)
-                                    } else if interval.isMinorPeriod {
-                                        Image(systemName: "bolt")
-                                            .font(.system(size: 9))
-                                            .foregroundColor(.cyan)
-                                    } else {
-                                        Circle()
-                                            .fill(isCurrent ? Color.cyan : color.opacity(0.8))
-                                            .frame(width: 4, height: 4)
-                                    }
-                                }
-                                .frame(height: 12)
-                                
-                                Text("\(efficacy)%")
-                                    .font(.system(size: 9, weight: .bold))
-                                    .foregroundColor(isSelected ? .black : color)
-                                    .padding(.horizontal, 5)
-                                    .padding(.vertical, 3)
-                                    .background(isSelected ? color : color.opacity(0.2))
-                                    .cornerRadius(6)
-                                
-                                Text(interval.activity.rawValue)
-                                    .font(.system(size: 7, weight: .semibold))
-                                    .foregroundColor(.white.opacity(0.6))
-                                    .lineLimit(1)
-                            }
-                            .padding(.vertical, 8)
-                            .padding(.horizontal, 6)
-                            .frame(width: 58)
-                            .background(isCurrent ? Color.cyan.opacity(0.15) : (isSelected ? Color.white.opacity(0.12) : Color.white.opacity(0.03)))
-                            .cornerRadius(10)
-                            .overlay(
-                                RoundedRectangle(cornerRadius: 10)
-                                    .stroke(isCurrent ? Color.cyan : (isSelected ? color : Color.white.opacity(0.06)), lineWidth: isCurrent ? 2 : (isSelected ? 1.5 : 1))
                             )
                             .id(interval.hour)
-                            .onTapGesture {
-                                withAnimation(.easeInOut(duration: 0.2)) {
-                                    if selectedHour == interval.hour {
-                                        selectedHour = nil
-                                    } else {
-                                        selectedHour = interval.hour
-                                    }
-                                }
-                            }
                         }
                     }
                     .padding(.vertical, 2)
@@ -1480,73 +1623,10 @@ struct HourlyActivityView: View {
                 }
             }
             
-            let activeHour = selectedHour ?? (isToday ? currentHour : nil)
             if let hour = activeHour, let interval = intervals.first(where: { $0.hour == hour }) {
-                let efficacy = min(100, Int(round((interval.score / 1.8) * 100.0)))
-                let color = colorForActivity(interval.activity)
                 let isCurrent = isToday && (interval.hour == currentHour)
-                
-                HStack(spacing: 12) {
-                    VStack(alignment: .leading, spacing: 4) {
-                        HStack(spacing: 6) {
-                            Text(String(format: "%02d:00 – %02d:00", interval.hour, (interval.hour + 1) % 24))
-                                .font(.system(size: 13, weight: .bold))
-                                .foregroundColor(.white)
-                            
-                            if isCurrent {
-                                Text("ORA IN CORSO")
-                                    .font(.system(size: 8, weight: .black))
-                                    .padding(.horizontal, 5)
-                                    .padding(.vertical, 2)
-                                    .background(Color.cyan)
-                                    .foregroundColor(.black)
-                                    .cornerRadius(4)
-                            }
-                            
-                            Text(interval.activity.description)
-                                .font(.system(size: 9, weight: .bold))
-                                .padding(.horizontal, 6)
-                                .padding(.vertical, 2)
-                                .background(color.opacity(0.25))
-                                .foregroundColor(color)
-                                .cornerRadius(4)
-                        }
-                        
-                        Text("Indice di efficacia stimato: \(efficacy)%")
-                            .font(.system(size: 10))
-                            .foregroundColor(.white.opacity(0.7))
-                    }
-                    
-                    Spacer()
-                    
-                    VStack(alignment: .trailing, spacing: 2) {
-                        if interval.isEnhanced {
-                            Text("🔥 Solunare + Alba/Tramonto")
-                                .font(.system(size: 9, weight: .semibold))
-                                .foregroundColor(.red)
-                        } else if interval.isMajorPeriod {
-                            Text("⚡ Periodo Maggiore")
-                                .font(.system(size: 9, weight: .semibold))
-                                .foregroundColor(.orange)
-                        } else if interval.isMinorPeriod {
-                            Text("🌑 Periodo Minore")
-                                .font(.system(size: 9, weight: .semibold))
-                                .foregroundColor(.cyan)
-                        } else {
-                            Text("Attività Ordinaria")
-                                .font(.system(size: 9))
-                                .foregroundColor(.white.opacity(0.5))
-                        }
-                    }
-                }
-                .padding(10)
-                .background(isCurrent ? Color.cyan.opacity(0.12) : Color.white.opacity(0.06))
-                .cornerRadius(10)
-                .overlay(
-                    RoundedRectangle(cornerRadius: 10)
-                        .stroke(isCurrent ? Color.cyan.opacity(0.5) : color.opacity(0.3), lineWidth: 1)
-                )
-                .transition(.opacity.combined(with: .move(edge: .top)))
+                HourlyDetailBannerView(interval: interval, isCurrent: isCurrent)
+                    .transition(.opacity.combined(with: .move(edge: .top)))
             }
         }
         .padding()
@@ -1557,16 +1637,6 @@ struct HourlyActivityView: View {
                 .stroke(Color.white.opacity(0.08), lineWidth: 1)
         )
         .padding(.horizontal)
-    }
-    
-    private func colorForActivity(_ level: ActivityLevel) -> Color {
-        switch level {
-        case .bassa: return .gray
-        case .moderata: return .cyan
-        case .buona: return .yellow
-        case .alta: return .orange
-        case .moltoAlta: return .green
-        }
     }
 }
 
