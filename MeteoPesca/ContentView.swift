@@ -400,7 +400,10 @@ struct ContentView: View {
                             )
                             .padding(.horizontal)
                             
-                            // 3. Tide curve SVG/Canvas
+                            // 3. Hourly Activity (Ora per Ora 24h)
+                            HourlyActivityView(intervals: forecast.hourlyIntervals)
+                            
+                            // 4. Tide curve SVG/Canvas
                             TideChartView(forecast: forecast)
                                 .frame(height: 160)
                                 .padding()
@@ -1339,6 +1342,186 @@ struct FactorRow: View {
     }
 }
 
+
+struct HourlyActivityView: View {
+    let intervals: [HourlyInterval]
+    @State private var selectedHour: Int? = nil
+    
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack {
+                Image(systemName: "clock.fill")
+                    .foregroundColor(.cyan)
+                    .font(.headline)
+                Text("Attività Ora per Ora")
+                    .font(.headline)
+                    .foregroundColor(.white)
+                Spacer()
+                Text("24h")
+                    .font(.system(size: 9, weight: .bold))
+                    .padding(.horizontal, 6)
+                    .padding(.vertical, 2)
+                    .background(Color.white.opacity(0.1))
+                    .foregroundColor(.white.opacity(0.7))
+                    .cornerRadius(4)
+            }
+            
+            Text("Scorri e tocca qualsiasi ora per consultare l'efficacia prevista")
+                .font(.system(size: 10))
+                .foregroundColor(.white.opacity(0.5))
+            
+            ScrollViewReader { proxy in
+                ScrollView(.horizontal, showsIndicators: false) {
+                    HStack(spacing: 8) {
+                        ForEach(intervals) { interval in
+                            let isSelected = selectedHour == interval.hour
+                            let efficacy = min(100, Int(round((interval.score / 1.8) * 100.0)))
+                            let color = colorForActivity(interval.activity)
+                            
+                            VStack(spacing: 5) {
+                                Text(String(format: "%02d:00", interval.hour))
+                                    .font(.system(size: 10, weight: isSelected ? .bold : .medium))
+                                    .foregroundColor(isSelected ? .white : .white.opacity(0.7))
+                                
+                                Group {
+                                    if interval.isEnhanced {
+                                        Text("🔥")
+                                            .font(.system(size: 10))
+                                    } else if interval.isMajorPeriod {
+                                        Image(systemName: "bolt.fill")
+                                            .font(.system(size: 9))
+                                            .foregroundColor(.orange)
+                                    } else if interval.isMinorPeriod {
+                                        Image(systemName: "bolt")
+                                            .font(.system(size: 9))
+                                            .foregroundColor(.cyan)
+                                    } else {
+                                        Circle()
+                                            .fill(color.opacity(0.8))
+                                            .frame(width: 4, height: 4)
+                                    }
+                                }
+                                .frame(height: 12)
+                                
+                                Text("\(efficacy)%")
+                                    .font(.system(size: 9, weight: .bold))
+                                    .foregroundColor(isSelected ? .black : color)
+                                    .padding(.horizontal, 5)
+                                    .padding(.vertical, 3)
+                                    .background(isSelected ? color : color.opacity(0.2))
+                                    .cornerRadius(6)
+                                
+                                Text(interval.activity.rawValue)
+                                    .font(.system(size: 7, weight: .semibold))
+                                    .foregroundColor(.white.opacity(0.6))
+                                    .lineLimit(1)
+                            }
+                            .padding(.vertical, 8)
+                            .padding(.horizontal, 6)
+                            .frame(width: 52)
+                            .background(isSelected ? Color.white.opacity(0.12) : Color.white.opacity(0.03))
+                            .cornerRadius(10)
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 10)
+                                    .stroke(isSelected ? color : Color.white.opacity(0.06), lineWidth: isSelected ? 1.5 : 1)
+                            )
+                            .id(interval.hour)
+                            .onTapGesture {
+                                withAnimation(.easeInOut(duration: 0.2)) {
+                                    if selectedHour == interval.hour {
+                                        selectedHour = nil
+                                    } else {
+                                        selectedHour = interval.hour
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    .padding(.vertical, 2)
+                }
+                .onAppear {
+                    let currentHour = Calendar.current.component(.hour, from: Date())
+                    proxy.scrollTo(currentHour, anchor: .center)
+                }
+            }
+            
+            if let hour = selectedHour, let interval = intervals.first(where: { $0.hour == hour }) {
+                let efficacy = min(100, Int(round((interval.score / 1.8) * 100.0)))
+                let color = colorForActivity(interval.activity)
+                
+                HStack(spacing: 12) {
+                    VStack(alignment: .leading, spacing: 4) {
+                        HStack(spacing: 6) {
+                            Text(String(format: "%02d:00 – %02d:00", interval.hour, (interval.hour + 1) % 24))
+                                .font(.system(size: 13, weight: .bold))
+                                .foregroundColor(.white)
+                            
+                            Text(interval.activity.description)
+                                .font(.system(size: 9, weight: .bold))
+                                .padding(.horizontal, 6)
+                                .padding(.vertical, 2)
+                                .background(color.opacity(0.25))
+                                .foregroundColor(color)
+                                .cornerRadius(4)
+                        }
+                        
+                        Text("Indice di efficacia stimato: \(efficacy)%")
+                            .font(.system(size: 10))
+                            .foregroundColor(.white.opacity(0.7))
+                    }
+                    
+                    Spacer()
+                    
+                    VStack(alignment: .trailing, spacing: 2) {
+                        if interval.isEnhanced {
+                            Text("🔥 Solunare + Alba/Tramonto")
+                                .font(.system(size: 9, weight: .semibold))
+                                .foregroundColor(.red)
+                        } else if interval.isMajorPeriod {
+                            Text("⚡ Periodo Maggiore")
+                                .font(.system(size: 9, weight: .semibold))
+                                .foregroundColor(.orange)
+                        } else if interval.isMinorPeriod {
+                            Text("🌑 Periodo Minore")
+                                .font(.system(size: 9, weight: .semibold))
+                                .foregroundColor(.cyan)
+                        } else {
+                            Text("Attività Ordinaria")
+                                .font(.system(size: 9))
+                                .foregroundColor(.white.opacity(0.5))
+                        }
+                    }
+                }
+                .padding(10)
+                .background(Color.white.opacity(0.06))
+                .cornerRadius(10)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 10)
+                        .stroke(color.opacity(0.3), lineWidth: 1)
+                )
+                .transition(.opacity.combined(with: .move(edge: .top)))
+            }
+        }
+        .padding()
+        .background(Color.white.opacity(0.04))
+        .cornerRadius(16)
+        .overlay(
+            RoundedRectangle(cornerRadius: 16)
+                .stroke(Color.white.opacity(0.08), lineWidth: 1)
+        )
+        .padding(.horizontal)
+    }
+    
+    private func colorForActivity(_ level: ActivityLevel) -> Color {
+        switch level {
+        case .bassa: return .gray
+        case .moderata: return .cyan
+        case .buona: return .yellow
+        case .alta: return .orange
+        case .moltoAlta: return .green
+        }
+    }
+}
 
 struct ContentView_Previews: PreviewProvider {
     static var previews: some View {

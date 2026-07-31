@@ -86,7 +86,25 @@ public class RulesEngine {
             periods[i].isEnhanced = isEnhanced
         }
         
-        // 4. Build Hourly Intervals & Calculate Scores
+        // 4. Calculate Astronomical & Tidal Factors
+        let coeff = TideEngine.calculateTideCoefficient(at: date, coordinate: location.coordinate)
+        let enhancedCount = periods.filter { $0.isEnhanced }.count
+        
+        let ast = AstronomyEngine.calculateAstronomy(date: date, coordinate: location.coordinate)
+        let moonDistance = ast.moonDistance
+        
+        // Moon Phase Factor (0.0 to 1.0)
+        let baseP = 0.10
+        let angle = 2.0 * Double.pi * moonAge / 29.53059
+        let fPhase = baseP + (1.0 - baseP) * pow(cos(angle), 2.0)
+        
+        // Moon Distance Factor
+        let fDist = pow(384400.0 / moonDistance, 3.0)
+        
+        // Tide range/coefficient Factor
+        let baseC = 0.30
+        let fCoeff = baseC + (1.0 - baseC) * (Double(coeff) - 20.0) / 100.0
+        
         let weatherMult = weather.multiplier()
         let tOpt = 20.0
         let sigmaCold = 5.0
@@ -98,57 +116,43 @@ public class RulesEngine {
             fWaterTemp = max(0.70, exp(-pow(waterTempCelsius - tOpt, 2.0) / (2.0 * pow(sigmaWarm, 2.0))))
         }
         
+        // 5. Build Hourly Intervals & Calculate Scores
         var intervals: [HourlyInterval] = []
         for hour in 0..<24 {
             guard let intervalStart = calendar.date(byAdding: .hour, value: hour, to: startOfDay),
                   let intervalEnd = calendar.date(byAdding: .hour, value: hour + 1, to: startOfDay) else { continue }
             
-            var hourScore = 0.5 // baseline activity
+            var solunarBonus = 0.0
             var isMajor = false
             var isMinor = false
             var isEnhanced = false
             
-            // Check matching periods
             for period in periods {
-                // If the hour overlaps with the period
                 let overlapStart = max(intervalStart, period.startTime)
                 let overlapEnd = min(intervalEnd, period.endTime)
                 
                 if overlapStart < overlapEnd {
                     let overlapDuration = overlapEnd.timeIntervalSince(overlapStart) / 3600.0
-                    let bonus: Double = (period.type == .maggior) ? 1.5 : 1.0
-                    hourScore += bonus * overlapDuration
+                    let baseBonus: Double = (period.type == .maggior) ? 1.5 : 1.0
+                    solunarBonus += baseBonus * overlapDuration
                     
                     if period.type == .maggior { isMajor = true }
                     if period.type == .minor { isMinor = true }
                     if period.isEnhanced {
                         isEnhanced = true
-                        hourScore += 0.5 // additional bonus for sunrise/sunset overlap
+                        solunarBonus += 0.5 * overlapDuration
                     }
                 }
             }
             
-            // Scientific Tidal Phase Activity Factor (Common Goby & Reef fish studies)
+            let solunarFactor = 1.0 + (solunarBonus / 1.0) * 0.5
             let midHourDate = intervalStart.addingTimeInterval(1800)
-            let tidalFactor = calculateTidalActivityFactor(date: midHourDate, tides: tides, coordinate: location.coordinate, maxAmplitude: maxAmplitude)
-            hourScore *= tidalFactor
-            hourScore *= weatherMult
-            hourScore *= fWaterTemp
-            hourScore = min(hourScore, 3.2) // apply stabilizing cap to prevent multiple overlapping bonuses from inflating the score
+            let tideFactor = calculateTidalActivityFactor(date: midHourDate, tides: tides, coordinate: location.coordinate, maxAmplitude: maxAmplitude)
             
-            // Map score to Activity level
-            let level: ActivityLevel
-            if hourScore < 0.6 {
-                level = .bassa
-            } else if hourScore < 1.2 {
-                level = .moderata
-            } else if hourScore < 1.8 {
-                level = .buona
-            } else if hourScore < 2.5 {
-                level = .alta
-            } else {
-                level = .moltoAlta
-            }
+            var hourScore = solunarFactor * tideFactor * weatherMult * fWaterTemp * fPhase * fDist * fCoeff
+            hourScore = min(hourScore, 1.8)
+            
+            let level = classifyScore(hourScore)
             
             intervals.append(HourlyInterval(
                 hour: hour,
@@ -162,56 +166,16 @@ public class RulesEngine {
             ))
         }
         
-        // 5. Calculate Daily Activity Rating using our calibrated solunar and tide rules
-        let coeff = TideEngine.calculateTideCoefficient(at: date, coordinate: location.coordinate)
-        let enhancedCount = periods.filter { $0.isEnhanced }.count
-        
-        let ast = AstronomyEngine.calculateAstronomy(date: date, coordinate: location.coordinate)
-        let moonDistance = ast.moonDistance
-        
-        // --- Principled Physics-Based Multiplicative Model ---
-        // 1. Moon Phase Factor (0.0 to 1.0)
-        // Cosine squared model: peaks at New Moon (age=0/29.53) and Full Moon (age=14.77), troughs at Quarters
-        let baseP = 0.10
-        let angle = 2.0 * Double.pi * moonAge / 29.53059
-        let fPhase = baseP + (1.0 - baseP) * pow(cos(angle), 2.0)
-        
-        // 2. Moon Distance Factor (using inverse-cube relative gravitational tidal force)
-        // Normalised relative to mean distance 384,400 km
-        let fDist = pow(384400.0 / moonDistance, 3.0)
-        
-        // 3. Tide range/coefficient Factor (0.0 to 1.0)
-        let baseC = 0.30
-        let fCoeff = baseC + (1.0 - baseC) * (Double(coeff) - 20.0) / 100.0
-        
-        // 4. Overlaps/Solunar peak alignment Factor (1.0 to 1.6)
+        // 6. Calculate Daily Activity Rating
         let wO = 0.60
         let fOverlap = 1.0 + wO * Double(enhancedCount)
         
-        // Combine multiplicatively and apply environmental modulations
         var score = fPhase * fDist * fCoeff * fOverlap
-        
-        // Weather composite factor
-        score *= weather.multiplier()
-        
-        // Bell-shaped Water Temp factor (Gaussian optimal performance curve at 20°C with sigma=5.0)
+        score *= weatherMult
         score *= fWaterTemp
-        score = min(score, 1.8) // apply stabilizing cap to prevent extreme inflation
+        score = min(score, 1.8)
         
-        // Map continuous score to daily activity level using optimized thresholds:
-        // T1 = 0.166, T2 = 0.416, T3 = 1.288
-        let dailyLevel: ActivityLevel
-        if score < 0.45 {
-            dailyLevel = .bassa
-        } else if score < 0.90 {
-            dailyLevel = .moderata
-        } else if score < 1.26 {
-            dailyLevel = .buona
-        } else if score < 1.62 {
-            dailyLevel = .alta
-        } else {
-            dailyLevel = .moltoAlta
-        }
+        let dailyLevel = classifyScore(score)
         
         // 7. Get Moon illumination for display
         let moonIllumination = AstronomyEngine.calculateAstronomy(date: date, coordinate: location.coordinate).moonIllumination
