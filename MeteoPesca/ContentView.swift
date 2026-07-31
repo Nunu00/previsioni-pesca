@@ -61,13 +61,13 @@ struct ContentView: View {
         let daysDifference = calendar.dateComponents([.day], from: startOfToday, to: startOfDay).day ?? 0
         let seasonalWaterTemp = climatologicalMean(for: startOfDay)
         
-        if daysDifference < -1 {
+        if daysDifference < 0 {
             let todayKey = cacheKeyFormatter.string(from: today)
             let currentSst = weatherCache[todayKey]?.waterTemp ?? 20.0
             let todayClimatology = climatologicalMean(for: today)
             let anomalyToday = currentSst - todayClimatology
             
-            let daysBack = Double(abs(daysDifference + 1))
+            let daysBack = Double(abs(daysDifference))
             let tau = decorrelationTime(for: startOfDay)
             let decayFactor = exp(-daysBack / tau)
             let projectedSst = seasonalWaterTemp + anomalyToday * decayFactor
@@ -80,18 +80,18 @@ struct ContentView: View {
                 message = "* Mostrati parametri medi climatologici storici (data passata)."
             }
             return (projectedSst, message)
-        } else if daysDifference > 7 {
+        } else if daysDifference >= 7 {
             // Anomaly Persistence Forecast with exponential decay (15 days time scale)
             let todayKey = cacheKeyFormatter.string(from: today)
             let currentSst = weatherCache[todayKey]?.waterTemp ?? 20.0
             
-            let day7Date = calendar.date(byAdding: .day, value: 7, to: today) ?? today
+            let day7Date = calendar.date(byAdding: .day, value: 6, to: today) ?? today
             let day7Key = cacheKeyFormatter.string(from: day7Date)
             let day7SST = weatherCache[day7Key]?.waterTemp ?? currentSst
             let day7Climatology = climatologicalMean(for: day7Date)
             let anomalyAtDay7 = day7SST - day7Climatology
             
-            let daysAhead = Double(daysDifference - 7)
+            let daysAhead = Double(daysDifference - 6)
             let tau = decorrelationTime(for: startOfDay)
             let decayFactor = exp(-daysAhead / tau)
             let projectedSst = seasonalWaterTemp + anomalyAtDay7 * decayFactor
