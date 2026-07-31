@@ -1412,21 +1412,9 @@ struct HourlyCellView: View {
 
     var body: some View {
         VStack(spacing: 5) {
-            HStack(spacing: 2) {
-                Text(String(format: "%02d:00", interval.hour))
-                    .font(.system(size: 10, weight: (isSelected || isCurrent) ? .bold : .medium))
-                    .foregroundColor(isCurrent ? .cyan : (isSelected ? .white : .white.opacity(0.7)))
-                
-                if isCurrent {
-                    Text("ORA")
-                        .font(.system(size: 7, weight: .black))
-                        .padding(.horizontal, 3)
-                        .padding(.vertical, 1)
-                        .background(Color.cyan)
-                        .foregroundColor(.black)
-                        .cornerRadius(3)
-                }
-            }
+            Text(String(format: "%02d:00", interval.hour))
+                .font(.system(size: 10, weight: (isSelected || isCurrent) ? .bold : .medium))
+                .foregroundColor(isCurrent ? .cyan : (isSelected ? .white : .white.opacity(0.7)))
             
             Group {
                 if interval.isEnhanced {
