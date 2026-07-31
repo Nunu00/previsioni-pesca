@@ -62,7 +62,24 @@ struct ContentView: View {
         let seasonalWaterTemp = climatologicalMean(for: startOfDay)
         
         if daysDifference < -1 {
-            return (seasonalWaterTemp, "* Mostrati parametri medi climatologici storici (data passata).")
+            let todayKey = cacheKeyFormatter.string(from: today)
+            let currentSst = weatherCache[todayKey]?.waterTemp ?? 20.0
+            let todayClimatology = climatologicalMean(for: today)
+            let anomalyToday = currentSst - todayClimatology
+            
+            let daysBack = Double(abs(daysDifference + 1))
+            let tau = decorrelationTime(for: startOfDay)
+            let decayFactor = exp(-daysBack / tau)
+            let projectedSst = seasonalWaterTemp + anomalyToday * decayFactor
+            
+            let anomalyPercent = Int(round(decayFactor * 100.0))
+            let message: String?
+            if anomalyPercent > 10 {
+                message = String(format: "* Anomalia termica stimata al %d%% (temperatura ricostruita: %.1f°C).", anomalyPercent, projectedSst)
+            } else {
+                message = "* Mostrati parametri medi climatologici storici (data passata)."
+            }
+            return (projectedSst, message)
         } else if daysDifference > 7 {
             // Anomaly Persistence Forecast with exponential decay (15 days time scale)
             let todayKey = cacheKeyFormatter.string(from: today)
@@ -401,7 +418,7 @@ struct ContentView: View {
                             .padding(.horizontal)
                             
                             // 3. Hourly Activity (Ora per Ora 24h)
-                            HourlyActivityView(intervals: forecast.hourlyIntervals)
+                            HourlyActivityView(intervals: forecast.hourlyIntervals, date: selectedDate)
                             
                             // 4. Tide curve SVG/Canvas
                             TideChartView(forecast: forecast)
@@ -1345,9 +1362,13 @@ struct FactorRow: View {
 
 struct HourlyActivityView: View {
     let intervals: [HourlyInterval]
+    let date: Date
     @State private var selectedHour: Int? = nil
     
     var body: some View {
+        let isToday = Calendar.current.isDate(date, inSameDayAs: Date())
+        let currentHour = Calendar.current.component(.hour, from: Date())
+        
         VStack(alignment: .leading, spacing: 12) {
             HStack {
                 Image(systemName: "clock.fill")
@@ -1374,14 +1395,27 @@ struct HourlyActivityView: View {
                 ScrollView(.horizontal, showsIndicators: false) {
                     HStack(spacing: 8) {
                         ForEach(intervals) { interval in
-                            let isSelected = selectedHour == interval.hour
+                            let isCurrent = isToday && (interval.hour == currentHour)
+                            let isSelected = selectedHour == interval.hour || (selectedHour == nil && isCurrent)
                             let efficacy = min(100, Int(round((interval.score / 1.8) * 100.0)))
                             let color = colorForActivity(interval.activity)
                             
                             VStack(spacing: 5) {
-                                Text(String(format: "%02d:00", interval.hour))
-                                    .font(.system(size: 10, weight: isSelected ? .bold : .medium))
-                                    .foregroundColor(isSelected ? .white : .white.opacity(0.7))
+                                HStack(spacing: 2) {
+                                    Text(String(format: "%02d:00", interval.hour))
+                                        .font(.system(size: 10, weight: (isSelected || isCurrent) ? .bold : .medium))
+                                        .foregroundColor(isCurrent ? .cyan : (isSelected ? .white : .white.opacity(0.7)))
+                                    
+                                    if isCurrent {
+                                        Text("ORA")
+                                            .font(.system(size: 7, weight: .black))
+                                            .padding(.horizontal, 3)
+                                            .padding(.vertical, 1)
+                                            .background(Color.cyan)
+                                            .foregroundColor(.black)
+                                            .cornerRadius(3)
+                                    }
+                                }
                                 
                                 Group {
                                     if interval.isEnhanced {
@@ -1397,7 +1431,7 @@ struct HourlyActivityView: View {
                                             .foregroundColor(.cyan)
                                     } else {
                                         Circle()
-                                            .fill(color.opacity(0.8))
+                                            .fill(isCurrent ? Color.cyan : color.opacity(0.8))
                                             .frame(width: 4, height: 4)
                                     }
                                 }
@@ -1418,12 +1452,12 @@ struct HourlyActivityView: View {
                             }
                             .padding(.vertical, 8)
                             .padding(.horizontal, 6)
-                            .frame(width: 52)
-                            .background(isSelected ? Color.white.opacity(0.12) : Color.white.opacity(0.03))
+                            .frame(width: 58)
+                            .background(isCurrent ? Color.cyan.opacity(0.15) : (isSelected ? Color.white.opacity(0.12) : Color.white.opacity(0.03)))
                             .cornerRadius(10)
                             .overlay(
                                 RoundedRectangle(cornerRadius: 10)
-                                    .stroke(isSelected ? color : Color.white.opacity(0.06), lineWidth: isSelected ? 1.5 : 1)
+                                    .stroke(isCurrent ? Color.cyan : (isSelected ? color : Color.white.opacity(0.06)), lineWidth: isCurrent ? 2 : (isSelected ? 1.5 : 1))
                             )
                             .id(interval.hour)
                             .onTapGesture {
@@ -1440,14 +1474,17 @@ struct HourlyActivityView: View {
                     .padding(.vertical, 2)
                 }
                 .onAppear {
-                    let currentHour = Calendar.current.component(.hour, from: Date())
-                    proxy.scrollTo(currentHour, anchor: .center)
+                    if isToday {
+                        proxy.scrollTo(currentHour, anchor: .center)
+                    }
                 }
             }
             
-            if let hour = selectedHour, let interval = intervals.first(where: { $0.hour == hour }) {
+            let activeHour = selectedHour ?? (isToday ? currentHour : nil)
+            if let hour = activeHour, let interval = intervals.first(where: { $0.hour == hour }) {
                 let efficacy = min(100, Int(round((interval.score / 1.8) * 100.0)))
                 let color = colorForActivity(interval.activity)
+                let isCurrent = isToday && (interval.hour == currentHour)
                 
                 HStack(spacing: 12) {
                     VStack(alignment: .leading, spacing: 4) {
@@ -1455,6 +1492,16 @@ struct HourlyActivityView: View {
                             Text(String(format: "%02d:00 – %02d:00", interval.hour, (interval.hour + 1) % 24))
                                 .font(.system(size: 13, weight: .bold))
                                 .foregroundColor(.white)
+                            
+                            if isCurrent {
+                                Text("ORA IN CORSO")
+                                    .font(.system(size: 8, weight: .black))
+                                    .padding(.horizontal, 5)
+                                    .padding(.vertical, 2)
+                                    .background(Color.cyan)
+                                    .foregroundColor(.black)
+                                    .cornerRadius(4)
+                            }
                             
                             Text(interval.activity.description)
                                 .font(.system(size: 9, weight: .bold))
@@ -1493,11 +1540,11 @@ struct HourlyActivityView: View {
                     }
                 }
                 .padding(10)
-                .background(Color.white.opacity(0.06))
+                .background(isCurrent ? Color.cyan.opacity(0.12) : Color.white.opacity(0.06))
                 .cornerRadius(10)
                 .overlay(
                     RoundedRectangle(cornerRadius: 10)
-                        .stroke(color.opacity(0.3), lineWidth: 1)
+                        .stroke(isCurrent ? Color.cyan.opacity(0.5) : color.opacity(0.3), lineWidth: 1)
                 )
                 .transition(.opacity.combined(with: .move(edge: .top)))
             }
